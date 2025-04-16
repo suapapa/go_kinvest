@@ -112,10 +112,15 @@ func (c *Client) refreshToken() error {
 		return nil
 	}
 
+	tokenPath := apiEnvs["TOKEN_PATH"]
+	if tokenPath == "" {
+		tokenPath = defaultAccessTokenPath
+	}
+
 	var err error
 	if c.token == nil || c.token.IsExpired() {
-		if fileExists(defaultAccessTokenPath) {
-			c.token, err = LoadAccessToken(defaultAccessTokenPath)
+		if fileExists(tokenPath) {
+			c.token, err = LoadAccessToken(tokenPath)
 			if err == nil {
 				return nil
 			}
@@ -126,7 +131,7 @@ func (c *Client) refreshToken() error {
 		}
 	}
 
-	err = c.token.Save(defaultAccessTokenPath)
+	err = c.token.Save(tokenPath)
 	if err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}

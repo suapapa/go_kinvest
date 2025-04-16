@@ -15,9 +15,10 @@ var (
 	emptyStr        = ""
 
 	apiEnvs = map[string]string{
-		"APPKEY":    "",
-		"APPSECRET": "",
-		"ACCOUNT":   "",
+		"APPKEY":     "",
+		"APPSECRET":  "",
+		"ACCOUNT":    "",
+		"TOKEN_PATH": "",
 	}
 )
 
