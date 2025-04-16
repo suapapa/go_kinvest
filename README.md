@@ -18,7 +18,7 @@ bal, _ := kc.GetDomesticAccountBalance()
 ```
 
 This package read following envs for the API calls:
-- `KINVEST_ACCOUNT` : 계좌번호
+- `KINVEST_ACCOUNT` : 계좌번호, XXXXXXXX-XX
 - `KINVEST_APPKEY` : 한국투자증권 개발자센터에서 발급받은 appkey
 - `KINVEST_APPSECRET` :  한국투자증권 개발자센터에서 발급받은 appkey
 

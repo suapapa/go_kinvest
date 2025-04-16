@@ -34,7 +34,7 @@ func unmarshalJsonBody(body io.Reader, data any) error {
 	return nil
 }
 
-func parseAccount(account string) (*string, *int, error) {
+func parseAccount(account string) (*string, *string, error) {
 	accountParts := strings.Split(account, "-")
 	if len(accountParts) != 2 {
 		return nil, nil, fmt.Errorf("invalid account format: %s", account)
@@ -44,12 +44,12 @@ func parseAccount(account string) (*string, *int, error) {
 		return nil, nil, fmt.Errorf("invalid account format: %s", account)
 	}
 
-	secondInt, err := strconv.Atoi(second)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid account format: %s", account)
-	}
+	// secondInt, err := strconv.Atoi(second)
+	// if err != nil {
+	// 	return nil, nil, fmt.Errorf("invalid account format: %s", account)
+	// }
 
-	return &first, &secondInt, nil
+	return &first, &second, nil
 }
 
 func getLocalIPAndMAC() (string, string, error) {

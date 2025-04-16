@@ -178,7 +178,7 @@ func (c *Client) genHashKey() (string, error) {
 
 	reqBody := mustCreateJsonReader(map[string]any{
 		"CANO":         *cano,
-		"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
+		"ACNT_PRDT_CD": *acntprdtcd,
 		"OVRS_EXCG_CD": "SHAA",
 	})
 	req, err := oapi.NewPostUapiHashkeyRequestWithBody(

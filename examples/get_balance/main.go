@@ -17,5 +17,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("balance: %v", bal)
+	fmt.Printf("%s\n", bal)
 }

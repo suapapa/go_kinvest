@@ -2,8 +2,8 @@ package kinvest
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/goccy/go-yaml"
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
@@ -49,18 +49,21 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 	if err := unmarshalJsonBody(resp.Body, respData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	log.Println("response data:", respData)
+
+	if respData.RtCd != "0" {
+		return nil, fmt.Errorf("response error: %s (%s)", respData.Msg1, respData.MsgCd)
+	}
 
 	return NewDomesticAccountBalance(respData)
 }
 
 type DomesticAccountBalanceItem struct {
-	PchsAmt     int     // 매입금매
-	EvluAmt     int     // 평가금액
-	EvluPflsAmt int     // 평가손익금액
-	CrdtLndAmt  int     // 신용대출금액
-	RealNassAmt int     // 실현손익금액
-	WholWeitRt  float64 // 전체비중율
+	PchsAmt     int     `yaml:"매입금매,omitempty"`
+	EvluAmt     int     `yaml:"평가금액,omitempty"`
+	EvluPflsAmt int     `yaml:"평가손익금액,omitempty"`
+	CrdtLndAmt  int     `yaml:"신용대출금액,omitempty"`
+	RealNassAmt int     `yaml:"실현손익금액,omitempty"`
+	WholWeitRt  float64 `yaml:"전체비중율,omitempty"`
 }
 
 func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, error) {
@@ -80,33 +83,37 @@ func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, 
 	return item, nil
 }
 
+func (i *DomesticAccountBalanceItem) Empty() bool {
+	return i == nil || (i.PchsAmt == 0 && i.EvluAmt == 0 && i.EvluPflsAmt == 0 && i.CrdtLndAmt == 0 && i.RealNassAmt == 0)
+}
+
 type DomesticAccountBalance struct {
-	Items                  map[string]*DomesticAccountBalanceItem
-	PchsAmtSmtl            int // 매입금액합계
-	NassTotAmt             int // 순자산총금액
-	LoanAmtSmtl            int // 대출금액합계
-	EvluPflsAmtSmtl        int // 평가손익금액합계
-	EvluAmtSmtl            int // 평가금액합계
-	TotAsstAmt             int // 총자산금액
-	TotLndaTotUlstLnda     int // 총대출금액총융자대출금액
-	CmaAutoLoanAmt         int // CMA자동대출금액
-	TotMglnAmt             int // 총담보대출금액
-	StlnEvluAmt            int // 대주평가금액
-	CrdtFncgAmt            int // 신용융자금융
-	OclAplLoanAmt          int // OCL_APL대출금액
-	PldgStupAmt            int // 질권설정금액
-	FrcrEvluTota           int // 외화평가총액
-	TotDnclAmt             int // 총예수금액
-	CmaEvluAmt             int // CMA평가금액
-	DnclAmt                int // 예수금예
-	TotSbstAmt             int // 총대용금액
-	ThdtRcvbAmt            int // 당일미수금액
-	OvrsStckEvluAmt1       int // 해외주식평가금액1
-	OvrsBondEvluAmt        int // 해외채권평가금액
-	MmfCmaMggeLoanAmt      int // MMFCMA담보대출금액
-	SbscDnclAmt            int // 청약예수금액
-	PbstSbscFndsLoanUseAmt int // 공모주청약자금대출사용금액
-	EtprCrdtGrntLoanAmt    int // 기업신용공예대출금액
+	Items                  map[string]*DomesticAccountBalanceItem `yaml:"계좌항목,omitempty"`
+	PchsAmtSmtl            int                                    `yaml:"매입금액합계,omitempty"`
+	NassTotAmt             int                                    `yaml:"순자산총금액,omitempty"`
+	LoanAmtSmtl            int                                    `yaml:"대출금액합계,omitempty"`
+	EvluPflsAmtSmtl        int                                    `yaml:"평가손익금액합계,omitempty"`
+	EvluAmtSmtl            int                                    `yaml:"평가금액합계,omitempty"`
+	TotAsstAmt             int                                    `yaml:"총자산금액,omitempty"`
+	TotLndaTotUlstLnda     int                                    `yaml:"총대출금액총융자대출금액,omitempty"`
+	CmaAutoLoanAmt         int                                    `yaml:"CMA자동대출금액,omitempty"`
+	TotMglnAmt             int                                    `yaml:"총담보대출금액,omitempty"`
+	StlnEvluAmt            int                                    `yaml:"대주평가금액,omitempty"`
+	CrdtFncgAmt            int                                    `yaml:"신용융자금융,omitempty"`
+	OclAplLoanAmt          int                                    `yaml:"OCL_APL대출금액,omitempty"`
+	PldgStupAmt            int                                    `yaml:"질권설정금액,omitempty"`
+	FrcrEvluTota           int                                    `yaml:"외화평가총액,omitempty"`
+	TotDnclAmt             int                                    `yaml:"총예수금액,omitempty"`
+	CmaEvluAmt             int                                    `yaml:"CMA평가금액,omitempty"`
+	DnclAmt                int                                    `yaml:"예수금액,omitempty"`
+	TotSbstAmt             int                                    `yaml:"총대용금액,omitempty"`
+	ThdtRcvbAmt            int                                    `yaml:"당일미수금액,omitempty"`
+	OvrsStckEvluAmt1       int                                    `yaml:"해외주식평가금액1,omitempty"`
+	OvrsBondEvluAmt        int                                    `yaml:"해외채권평가금액,omitempty"`
+	MmfCmaMggeLoanAmt      int                                    `yaml:"MMFCMA담보대출금액,omitempty"`
+	SbscDnclAmt            int                                    `yaml:"청약예수금액,omitempty"`
+	PbstSbscFndsLoanUseAmt int                                    `yaml:"공모주청약자금대출사용금액,omitempty"`
+	EtprCrdtGrntLoanAmt    int                                    `yaml:"기업신용공예대출금액,omitempty"`
 }
 
 func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBalanceResp) (*DomesticAccountBalance, error) {
@@ -121,7 +128,9 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
 			}
-			bItems[key] = item
+			if !item.Empty() {
+				bItems[key] = item
+			}
 		}
 	} else if len(data.Output1) == 16 {
 		for i, key := range output1Items16 {
@@ -129,7 +138,9 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
 			}
-			bItems[key] = item
+			if !item.Empty() {
+				bItems[key] = item
+			}
 		}
 	} else if len(data.Output1) == 0 {
 		bItems = nil
@@ -165,6 +176,15 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 		PbstSbscFndsLoanUseAmt: strToInt(data.Output2.PbstSbscFndsLoanUseAmt),
 		EtprCrdtGrntLoanAmt:    strToInt(data.Output2.EtprCrdtGrntLoanAmt),
 	}, nil
+}
+
+func (b *DomesticAccountBalance) String() string {
+	yb, err := yaml.Marshal(b)
+	if err != nil {
+		type Alias DomesticAccountBalance
+		return fmt.Sprintf("%+v", (*Alias)(b))
+	}
+	return string(yb)
 }
 
 var (

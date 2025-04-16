@@ -3,6 +3,7 @@ module github.com/suapapa/go_kinvest
 go 1.24.2
 
 require (
+	github.com/goccy/go-yaml v1.17.1
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/stretchr/testify v1.8.4
 )
