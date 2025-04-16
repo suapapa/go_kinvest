@@ -8,6 +8,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
+// ClientConfig holds the configuration for the Kinvest client
 type ClientConfig struct {
 	AppKey    string
 	AppSecret string
@@ -15,13 +16,14 @@ type ClientConfig struct {
 	Mac       string // MAC 주소
 }
 
+// NewClientConfigFromEnv creates a new ClientConfig from environment variables
 func NewClientConfigFromEnv() (*ClientConfig, error) {
 	appKey := apiEnvs["APPKEY"]
 	appSecret := apiEnvs["APPSECRET"]
 	account := apiEnvs["CANO"]
 	mac := apiEnvs["MAC"]
 	if appKey == "" || appSecret == "" || account == "" {
-		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_CANO env vars")
+		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_CANO, KINVEST_MAC env vars")
 	}
 	return &ClientConfig{
 		AppKey:    appKey,
@@ -31,6 +33,7 @@ func NewClientConfigFromEnv() (*ClientConfig, error) {
 	}, nil
 }
 
+// Client is the main client for the Kinvest API
 type Client struct {
 	oc *oapi.Client
 
@@ -45,6 +48,10 @@ type Client struct {
 	hash string
 }
 
+// NewClient creates a new Kinvest client
+// It uses the provided config to set up the client
+// If the config is nil, it will use the environment variables
+// KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_CANO, KINVEST_MAC
 func NewClient(config *ClientConfig) (*Client, error) {
 	var err error
 	c := &Client{
@@ -53,6 +60,26 @@ func NewClient(config *ClientConfig) (*Client, error) {
 		account:   config.Account,
 		mac:       config.Mac,
 	}
+	if c.appKey == "" {
+		c.appKey = apiEnvs["APPKEY"]
+	}
+	if c.appSecret == "" {
+		c.appSecret = apiEnvs["APPSECRET"]
+	}
+	if c.account == "" {
+		c.account = apiEnvs["CANO"]
+	}
+	if c.mac == "" {
+		c.mac = apiEnvs["MAC"]
+	}
+	if c.appKey == "" || c.appSecret == "" || c.account == "" || c.mac == "" {
+		return nil, fmt.Errorf("invalid config: appKey, appSecret, account, mac must be set")
+	}
+
+	// addReqAuthHeader := func(ctx context.Context, req *http.Request) error {
+	// 	return nil
+	// }
+
 	c.oc, err = oapi.NewClient(
 		prodAddr,
 		// oapi.WithRequestEditorFn(addReqAuthHeader),
@@ -61,7 +88,7 @@ func NewClient(config *ClientConfig) (*Client, error) {
 		return nil, fmt.Errorf("failed to create oapi client: %w", err)
 	}
 
-	if err := c.getToken(); err != nil {
+	if err := c.refreshToken(); err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
@@ -74,13 +101,19 @@ func NewClient(config *ClientConfig) (*Client, error) {
 	return c, nil
 }
 
-// func addReqAuthHeader(ctx context.Context, req *http.Request) error {
-// 	// TBD
-// 	return nil
-// }
+func (c *Client) refreshToken() error {
+	// Check if the token is either expired or will expire within 1 minute
+	if c.token != "" && c.tokenExpiry.After(time.Now().Add(1*time.Minute)) {
+		return nil
+	}
+	if err := c.getToken(); err != nil {
+		return fmt.Errorf("failed to refresh token: %w", err)
+	}
+	return nil
+}
 
 func (c *Client) getToken() error {
-	reqBody := newJsonReaderMust(map[string]any{
+	reqBody := mustCreateJsonReader(map[string]any{
 		"grant_type": "client_credentials",
 		"appkey":     c.appKey,
 		"appsecret":  c.appSecret,
@@ -106,7 +139,7 @@ func (c *Client) getToken() error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	ret := unmarshalJsonRespBodyMust(resp.Body)
+	ret := mustUnmarshalJsonBody(resp.Body)
 	c.token = ret["access_token"].(string)
 	if c.token == "" {
 		return fmt.Errorf("empty token")
@@ -123,7 +156,7 @@ func (c *Client) getToken() error {
 }
 
 func (c *Client) genHashKey() (string, error) {
-	reqBody := newJsonReaderMust(map[string]any{
+	reqBody := mustCreateJsonReader(map[string]any{
 		"CANO":         c.account,
 		"ACNT_PRDT_CD": "01",
 		"OVRS_EXCG_CD": "SHAA",
@@ -151,7 +184,7 @@ func (c *Client) genHashKey() (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	ret := unmarshalJsonRespBodyMust(resp.Body)
+	ret := mustUnmarshalJsonBody(resp.Body)
 	hash, ok := ret["HASH"].(string)
 	if !ok {
 		return "", fmt.Errorf("unexpected response format: %v", ret)

@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-func newJsonReaderMust(data map[string]any) *bytes.Reader {
+func mustCreateJsonReader(data map[string]any) *bytes.Reader {
 	buff := bytes.NewBuffer(nil)
 	if err := json.NewEncoder(buff).Encode(data); err != nil {
 		panic(err)
@@ -15,7 +15,7 @@ func newJsonReaderMust(data map[string]any) *bytes.Reader {
 	return bytes.NewReader(buff.Bytes())
 }
 
-func unmarshalJsonRespBodyMust(body io.Reader) map[string]any {
+func mustUnmarshalJsonBody(body io.Reader) map[string]any {
 	var ret map[string]any
 	if err := json.NewDecoder(body).Decode(&ret); err != nil {
 		panic(err)
