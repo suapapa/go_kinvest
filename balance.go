@@ -2,6 +2,7 @@ package kinvest
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
@@ -26,7 +27,7 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 			INQRDVSN1:      &emptyStr,
 			BSPRBFDTAPLYYN: &emptyStr,
 			ContentType:    &jsonContentType,
-			Authorization:  &c.token,
+			Authorization:  c.token.Authorization(),
 			Appkey:         &c.appKey,
 			Appsecret:      &c.appSecret,
 			TrId:           &trID,
@@ -48,6 +49,7 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 	if err := unmarshalJsonBody(resp.Body, respData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
+	log.Println("response data:", respData)
 
 	return NewDomesticAccountBalance(respData)
 }
@@ -113,7 +115,6 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 	}
 
 	bItems := make(map[string]*DomesticAccountBalanceItem)
-
 	if len(data.Output1) == 19 {
 		for i, key := range output1Items19 {
 			item, err := NewDomesticAccountBalanceItem(&data.Output1[i])
@@ -130,6 +131,8 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 			}
 			bItems[key] = item
 		}
+	} else if len(data.Output1) == 0 {
+		bItems = nil
 	} else {
 		return nil, fmt.Errorf("unexpected number of items: %d", len(data.Output1))
 	}

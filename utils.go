@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strconv"
+	"strings"
 )
 
 func mustCreateJsonReader(data map[string]any) *bytes.Reader {
@@ -33,9 +35,11 @@ func unmarshalJsonBody(body io.Reader, data any) error {
 }
 
 func parseAccount(account string) (*string, *int, error) {
-	var first string
-	var second string
-	fmt.Scanf(account, "%s-%s", &first, &second)
+	accountParts := strings.Split(account, "-")
+	if len(accountParts) != 2 {
+		return nil, nil, fmt.Errorf("invalid account format: %s", account)
+	}
+	first, second := accountParts[0], accountParts[1]
 	if len(first) != 8 || len(second) != 2 {
 		return nil, nil, fmt.Errorf("invalid account format: %s", account)
 	}
@@ -96,4 +100,11 @@ func strToFloat(s string) float64 {
 		return 0
 	}
 	return f
+}
+
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

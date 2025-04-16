@@ -34,15 +34,13 @@ func NewClientConfigFromEnv() (*ClientConfig, error) {
 type Client struct {
 	oc *oapi.Client
 
+	ip      string
+	mac     string
+	account string
+
 	appKey    string
 	appSecret string
-	account   string
-
-	ip  string
-	mac string
-
-	token       string
-	tokenExpiry time.Time
+	token     *AccessToken
 
 	hash string
 }
@@ -110,17 +108,33 @@ func NewClient(config *ClientConfig) (*Client, error) {
 }
 
 func (c *Client) refreshToken() error {
-	// Check if the token is either expired or will expire within 1 minute
-	if c.token != "" && c.tokenExpiry.After(time.Now().Add(1*time.Minute)) {
+	if c.token != nil && !c.token.IsExpired() {
 		return nil
 	}
-	if err := c.getToken(); err != nil {
-		return fmt.Errorf("failed to refresh token: %w", err)
+
+	var err error
+	if c.token == nil || c.token.IsExpired() {
+		if fileExists(defaultAccessTokenPath) {
+			c.token, err = LoadAccessToken(defaultAccessTokenPath)
+			if err == nil {
+				return nil
+			}
+		}
+		c.token, err = c.getToken()
+		if err != nil {
+			return fmt.Errorf("failed to get token: %w", err)
+		}
 	}
+
+	err = c.token.Save(defaultAccessTokenPath)
+	if err != nil {
+		return fmt.Errorf("failed to save token: %w", err)
+	}
+
 	return nil
 }
 
-func (c *Client) getToken() error {
+func (c *Client) getToken() (*AccessToken, error) {
 	reqBody := mustCreateJsonReader(map[string]any{
 		"grant_type": "client_credentials",
 		"appkey":     c.appKey,
@@ -135,38 +149,36 @@ func (c *Client) getToken() error {
 		reqBody,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := c.oc.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	ret := mustUnmarshalJsonBody(resp.Body)
-	c.token = ret["token_type"].(string) + " " + ret["access_token"].(string)
-	if c.token == "" {
-		return fmt.Errorf("empty token")
-	}
-	c.tokenExpiry, err = time.Parse(time.RFC3339, ret["access_token_expired"].(string))
-	if err != nil {
-		return fmt.Errorf("failed to parse token expiry: %w", err)
-	}
-	if c.tokenExpiry.Before(time.Now()) {
-		return fmt.Errorf("token expired")
-	}
+	data := mustUnmarshalJsonBody(resp.Body)
 
-	return nil
+	return &AccessToken{
+		TokenType:   data["token_type"].(string),
+		AccessToken: data["access_token"].(string),
+		ExpiresIn:   time.Now().Add(time.Duration((data["expires_in"].(float64))) * time.Second),
+	}, nil
 }
 
 func (c *Client) genHashKey() (string, error) {
+	cano, acntprdtcd, err := parseAccount(c.account)
+	if err != nil {
+		return "", fmt.Errorf("parse account failed: %w", err)
+	}
+
 	reqBody := mustCreateJsonReader(map[string]any{
-		"ACCOUNT":      c.account,
-		"ACNT_PRDT_CD": "01",
+		"CANO":         *cano,
+		"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
 		"OVRS_EXCG_CD": "SHAA",
 	})
 	req, err := oapi.NewPostUapiHashkeyRequestWithBody(
