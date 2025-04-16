@@ -18,7 +18,6 @@ var (
 		"APPKEY":    "",
 		"APPSECRET": "",
 		"ACCOUNT":   "",
-		"MAC":       "",
 	}
 )
 

@@ -12,8 +12,7 @@ import (
 type ClientConfig struct {
 	AppKey    string
 	AppSecret string
-	Account   string // 계좌번호
-	Mac       string // MAC 주소
+	Account   string // 계좌번호 XXXXXXXX-XX
 }
 
 // NewClientConfigFromEnv creates a new ClientConfig from environment variables
@@ -21,15 +20,13 @@ func NewClientConfigFromEnv() (*ClientConfig, error) {
 	appKey := apiEnvs["APPKEY"]
 	appSecret := apiEnvs["APPSECRET"]
 	account := apiEnvs["ACCOUNT"]
-	mac := apiEnvs["MAC"]
 	if appKey == "" || appSecret == "" || account == "" {
-		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT, KINVEST_MAC env vars")
+		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT env vars")
 	}
 	return &ClientConfig{
 		AppKey:    appKey,
 		AppSecret: appSecret,
 		Account:   account,
-		Mac:       mac,
 	}, nil
 }
 
@@ -40,7 +37,9 @@ type Client struct {
 	appKey    string
 	appSecret string
 	account   string
-	mac       string
+
+	ip  string
+	mac string
 
 	token       string
 	tokenExpiry time.Time
@@ -53,18 +52,24 @@ type Client struct {
 // If the config is nil, it will use the environment variables
 // KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT, KINVEST_MAC
 func NewClient(config *ClientConfig) (*Client, error) {
-	var err error
+	ip, mac, err := getLocalIPAndMAC()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get local IP and MAC: %w", err)
+	}
+
 	if config == nil {
 		config, err = NewClientConfigFromEnv()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create client config: %w", err)
 		}
 	}
+
 	c := &Client{
 		appKey:    config.AppKey,
 		appSecret: config.AppSecret,
 		account:   config.Account,
-		mac:       config.Mac,
+		ip:        ip,
+		mac:       mac,
 	}
 	if c.appKey == "" {
 		c.appKey = apiEnvs["APPKEY"]
@@ -75,11 +80,8 @@ func NewClient(config *ClientConfig) (*Client, error) {
 	if c.account == "" {
 		c.account = apiEnvs["ACCOUNT"]
 	}
-	if c.mac == "" {
-		c.mac = apiEnvs["MAC"]
-	}
-	if c.appKey == "" || c.appSecret == "" || c.account == "" || c.mac == "" {
-		return nil, fmt.Errorf("invalid config: appKey, appSecret, account, mac must be set")
+	if c.appKey == "" || c.appSecret == "" || c.account == "" {
+		return nil, fmt.Errorf("invalid config: appKey, appSecret, account must be set")
 	}
 
 	// addReqAuthHeader := func(ctx context.Context, req *http.Request) error {

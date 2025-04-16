@@ -48,41 +48,32 @@ func parseAccount(account string) (*string, *int, error) {
 	return &first, &secondInt, nil
 }
 
-// NetIF represents a network interface
-type NetIF struct {
-	Name    string
-	MacAddr string
-}
-
-// GetNetIFs returns a list of network interfaces
-// that are not loopback and have a valid MAC address
-// and do not start with 'v'
-func GetNetIFs() ([]*NetIF, error) {
-	ifas, err := net.Interfaces()
+func getLocalIPAndMAC() (string, string, error) {
+	interfaces, err := net.Interfaces()
 	if err != nil {
-		return nil, err
+		return "", "", fmt.Errorf("failed to get network interfaces: %w", err)
 	}
 
-	netifs := make([]*NetIF, 0, len(ifas))
-	for _, ifa := range ifas {
-		name := ifa.Name
-		mac := ifa.HardwareAddr.String()
-		if mac == "" || len(mac) != 17 {
+	for _, iface := range interfaces {
+		// Skip loopback interfaces and interfaces without a MAC address
+		if iface.Flags&net.FlagLoopback != 0 || iface.HardwareAddr == nil {
 			continue
 		}
-		if len(name) == 0 || name == "lo" || name == "lo0" {
-			continue
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", "", fmt.Errorf("failed to get addresses for interface %s: %w", iface.Name, err)
 		}
-		if len(name) > 0 && name[0] == 'v' {
-			continue
+
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
+				return ipNet.IP.String(), iface.HardwareAddr.String(), nil
+			}
 		}
-		netifs = append(netifs, &NetIF{
-			Name:    name,
-			MacAddr: mac,
-		})
 	}
 
-	return netifs, nil
+	return "", "", fmt.Errorf("no valid network interface found")
 }
 
 func strToInt(s string) int {
