@@ -20,10 +20,10 @@ type ClientConfig struct {
 func NewClientConfigFromEnv() (*ClientConfig, error) {
 	appKey := apiEnvs["APPKEY"]
 	appSecret := apiEnvs["APPSECRET"]
-	account := apiEnvs["CANO"]
+	account := apiEnvs["ACCOUNT"]
 	mac := apiEnvs["MAC"]
 	if appKey == "" || appSecret == "" || account == "" {
-		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_CANO, KINVEST_MAC env vars")
+		return nil, fmt.Errorf("set KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT, KINVEST_MAC env vars")
 	}
 	return &ClientConfig{
 		AppKey:    appKey,
@@ -51,9 +51,15 @@ type Client struct {
 // NewClient creates a new Kinvest client
 // It uses the provided config to set up the client
 // If the config is nil, it will use the environment variables
-// KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_CANO, KINVEST_MAC
+// KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT, KINVEST_MAC
 func NewClient(config *ClientConfig) (*Client, error) {
 	var err error
+	if config == nil {
+		config, err = NewClientConfigFromEnv()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create client config: %w", err)
+		}
+	}
 	c := &Client{
 		appKey:    config.AppKey,
 		appSecret: config.AppSecret,
@@ -67,7 +73,7 @@ func NewClient(config *ClientConfig) (*Client, error) {
 		c.appSecret = apiEnvs["APPSECRET"]
 	}
 	if c.account == "" {
-		c.account = apiEnvs["CANO"]
+		c.account = apiEnvs["ACCOUNT"]
 	}
 	if c.mac == "" {
 		c.mac = apiEnvs["MAC"]
@@ -140,7 +146,7 @@ func (c *Client) getToken() error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 	ret := mustUnmarshalJsonBody(resp.Body)
-	c.token = ret["access_token"].(string)
+	c.token = ret["token_type"].(string) + " " + ret["access_token"].(string)
 	if c.token == "" {
 		return fmt.Errorf("empty token")
 	}
@@ -157,7 +163,7 @@ func (c *Client) getToken() error {
 
 func (c *Client) genHashKey() (string, error) {
 	reqBody := mustCreateJsonReader(map[string]any{
-		"CANO":         c.account,
+		"ACCOUNT":      c.account,
 		"ACNT_PRDT_CD": "01",
 		"OVRS_EXCG_CD": "SHAA",
 	})

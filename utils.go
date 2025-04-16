@@ -3,8 +3,10 @@ package kinvest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
+	"strconv"
 )
 
 func mustCreateJsonReader(data map[string]any) *bytes.Reader {
@@ -21,6 +23,29 @@ func mustUnmarshalJsonBody(body io.Reader) map[string]any {
 		panic(err)
 	}
 	return ret
+}
+
+func unmarshalJsonBody(body io.Reader, data any) error {
+	if err := json.NewDecoder(body).Decode(data); err != nil {
+		return fmt.Errorf("failed to unmarshal json body: %w", err)
+	}
+	return nil
+}
+
+func parseAccount(account string) (*string, *int, error) {
+	var first string
+	var second string
+	fmt.Scanf(account, "%s-%s", &first, &second)
+	if len(first) != 8 || len(second) != 2 {
+		return nil, nil, fmt.Errorf("invalid account format: %s", account)
+	}
+
+	secondInt, err := strconv.Atoi(second)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid account format: %s", account)
+	}
+
+	return &first, &secondInt, nil
 }
 
 // NetIF represents a network interface
@@ -58,4 +83,26 @@ func GetNetIFs() ([]*NetIF, error) {
 	}
 
 	return netifs, nil
+}
+
+func strToInt(s string) int {
+	if s == "" {
+		return 0
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
+}
+
+func strToFloat(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return f
 }

@@ -2,14 +2,19 @@
 
 **!! WIP !!**
 
-Install:
+## Usage
+
+Install pkg:
 ```sh
 go get github.com/suapapa/go_kinvest
 ```
 
 Example usage:
 ```go
-// TBD
+import kinvest "github.com/suapapa/go_kinvest"
+// ...
+kc, _ := kinvest.NewClient(nil)
+bal, _ := kc.GetDomesticAccountBalance()
 ```
 
 This package read following envs for the API calls:
@@ -19,9 +24,12 @@ This package read following envs for the API calls:
 - `KINVEST_MAC` : 한국투자증권 API 서버와 통신하는데 사용되는 네트워크 인터페이스의 MAC 주소
 
 ## TODO
-- [ ] Make essensial member functions `.Balance`, `.Buy`, `Sell`
+- [ ] Make member functions `.Sell`
+- [ ] Make member functions `.Buy`
+- [x] `.GetDomesticAccountBalance`
 - [x] Make client struct `kinvest.Client`
 - [x] Convert postman env. to Go code manually
+- [x] Convert openapi yaml to Go code
 
 ## Reference
 - [한국투자 OpenAPI](https://apiportal.koreainvestment.com/apiservice) - API문서
