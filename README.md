@@ -1,6 +1,6 @@
 # kinvest : A Go package for 한국투자증권 client
 
-**!! WIP !!**
+![logo](_img/go_kinvest.png)
 
 ## Usage
 
@@ -20,7 +20,7 @@ bal, _ := kc.GetDomesticAccountBalance()
 This package read following envs for the API calls:
 - `KINVEST_ACCOUNT` : 계좌번호, XXXXXXXX-XX
 - `KINVEST_APPKEY` : 한국투자증권 개발자센터에서 발급받은 appkey
-- `KINVEST_APPSECRET` :  한국투자증권 개발자센터에서 발급받은 appkey
+- `KINVEST_APPSECRET` :  한국투자증권 개발자센터에서 발급받은 appsecret
 
 ## TODO
 - [ ] /oauth2/Approval (post) : 웹소켓접속키발급
