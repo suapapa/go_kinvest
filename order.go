@@ -7,7 +7,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *BuytDomesticStockOption) error {
+func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) error {
 	err := c.refreshToken()
 	if err != nil {
 		return fmt.Errorf("refresh token failed: %w", err)
@@ -22,7 +22,85 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *BuytDomesticStock
 	}
 
 	if opt == nil {
-		opt, err = NewBuyDomesticStockOption("시장가", 0)
+		opt, err = NewOrderDomesticStockOption("시장가", 0)
+		if err != nil {
+			return fmt.Errorf("create buy option failed: %w", err)
+		}
+	}
+
+	cano, acntprdtcd, err := parseAccount(c.account)
+	if err != nil {
+		return fmt.Errorf("parse account failed: %w", err)
+	}
+	ordDVSN, err := opt.getDVSN()
+	if err != nil {
+		return fmt.Errorf("get order type failed: %w", err)
+	}
+	ordPrice, err := opt.getOrderPrice()
+	if err != nil {
+		return fmt.Errorf("get order price failed: %w", err)
+	}
+
+	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
+		"CANO":         cano,
+		"ACNT_PRDT_CD": acntprdtcd,
+		"PDNO":         itemNo,                 // 종목코드
+		"ORD_DVSN":     ordDVSN,                // 주문구분
+		"ORD_QTY":      fmt.Sprintf("%d", qty), // 주문수량
+		"ORD_UNPR":     ordPrice,               // 주문단가 0: 시장가
+		"SLL_TYPE":     opt.getSllType(),       // 매도유형
+	})
+	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
+		c.oc.Server,
+		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
+			ContentType:   &jsonContentType,
+			Authorization: c.token.Authorization(),
+			Appkey:        &c.appKey,
+			Appsecret:     &c.appSecret,
+			TrId:          &trIDSellCash,
+		},
+		jsonContentType,
+		reqBody,
+	)
+	if err != nil {
+		return fmt.Errorf("create request failed: %w", err)
+	}
+	res, err := c.oc.Client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return fmt.Errorf("request failed: %s", res.Status)
+	}
+	// io.Copy(os.Stdout, res.Body)
+	respBody := mustUnmarshalJsonBody(res.Body)
+	if respBody == nil {
+		return fmt.Errorf("unmarshal response body failed")
+	}
+	if respBody["rt_cd"] != "0" {
+		return fmt.Errorf("response error: %s (%s)", respBody["msg1"], respBody["msg_cd"])
+	}
+
+	return nil
+}
+
+func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) error {
+	err := c.refreshToken()
+	if err != nil {
+		return fmt.Errorf("refresh token failed: %w", err)
+	}
+
+	if len(itemNo) != 6 {
+		return fmt.Errorf("invalid item no: %s", itemNo)
+	}
+
+	if qty <= 0 {
+		return fmt.Errorf("invalid qty: %d", qty)
+	}
+
+	if opt == nil {
+		opt, err = NewOrderDomesticStockOption("시장가", 0)
 		if err != nil {
 			return fmt.Errorf("create buy option failed: %w", err)
 		}
@@ -66,14 +144,12 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *BuytDomesticStock
 	}
 	res, err := c.oc.Client.Do(req)
 	if err != nil {
-		// io.Copy(os.Stdout, res.Body)
 		return fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
 		return fmt.Errorf("request failed: %s", res.Status)
 	}
-	// TODO : remove
 	// io.Copy(os.Stdout, res.Body)
 	respBody := mustUnmarshalJsonBody(res.Body)
 	if respBody == nil {
@@ -86,12 +162,13 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *BuytDomesticStock
 	return nil
 }
 
-type BuytDomesticStockOption struct {
+type OrderDomesticStockOption struct {
 	orderType  string // 주문구분
 	orderPrice int    // 주문단가
+	sellType   string // 매도구분 : 일반매도, 임의매도, 대차매도
 }
 
-// NewBuyDomesticStockOption creates a new BuytDomesticStockOption.
+// NewOrderDemesticStockOption creates a new BuytDomesticStockOption.
 // if orderPrice is 0, orderType is somthing like the "시장가".
 // orderType should be one of the following:
 //
@@ -100,7 +177,7 @@ type BuytDomesticStockOption struct {
 //	FOK최유리, 장중대량, 장중바스켓, 장개시전 시간외대량, 장개시전 시간외바스켓, 장개시전 금전신탁자사주,
 //	장개시전 자기주식, 시간외대량, 시간외자사주신탁, 시간외대량자기주식, 바스켓, 중간가, 스톱지정가,
 //	중간가IOC, 중간가FOK
-func NewBuyDomesticStockOption(orderType string, orderPrice int) (*BuytDomesticStockOption, error) {
+func NewOrderDomesticStockOption(orderType string, orderPrice int) (*OrderDomesticStockOption, error) {
 	if orderType == "" && orderPrice > 0 {
 		orderType = "지정가"
 	} else if orderType == "" && orderPrice == 0 {
@@ -113,16 +190,24 @@ func NewBuyDomesticStockOption(orderType string, orderPrice int) (*BuytDomesticS
 		return nil, fmt.Errorf("order price is negative: %d", orderPrice)
 	}
 
-	return &BuytDomesticStockOption{
+	return &OrderDomesticStockOption{
 		orderType:  orderType,
 		orderPrice: orderPrice,
 	}, nil
 }
 
-func (o *BuytDomesticStockOption) getDVSN() (string, error) {
-	if o == nil {
-		return "", nil
+func (o *OrderDomesticStockOption) SetSellType(sellType string) {
+	sellType = strings.TrimSpace(sellType)
+	sellType = strings.TrimRight(sellType, "매도")
+	switch sellType {
+	case "일반", "임의", "대차":
+		o.sellType = sellType + "매도"
+	default:
+		o.sellType = "일반매도"
 	}
+}
+
+func (o *OrderDomesticStockOption) getDVSN() (string, error) {
 	if o.orderType == "" {
 		return "", fmt.Errorf("order type is empty")
 	}
@@ -133,7 +218,7 @@ func (o *BuytDomesticStockOption) getDVSN() (string, error) {
 	return "", fmt.Errorf("order type not found: %s", o.orderType)
 }
 
-func (o *BuytDomesticStockOption) getOrderPrice() (string, error) {
+func (o *OrderDomesticStockOption) getOrderPrice() (string, error) {
 	if o.orderPrice == 0 {
 		return "0", nil
 	}
@@ -141,6 +226,18 @@ func (o *BuytDomesticStockOption) getOrderPrice() (string, error) {
 		return "", fmt.Errorf("order price is negative: %d", o.orderPrice)
 	}
 	return fmt.Sprintf("%d", o.orderPrice), nil
+}
+
+func (o *OrderDomesticStockOption) getSllType() string {
+	sllTypeCode := map[string]string{
+		"일반매도": "01",
+		"임의매도": "02",
+		"대차매도": "05",
+	}
+	if code, ok := sllTypeCode[o.sellType]; ok {
+		return code
+	}
+	return sllTypeCode["일반매도"]
 }
 
 type orderType map[string]string
