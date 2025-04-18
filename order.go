@@ -2,43 +2,45 @@ package kinvest
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) error {
+func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
 	err := c.refreshToken()
 	if err != nil {
-		return fmt.Errorf("refresh token failed: %w", err)
+		return nil, fmt.Errorf("refresh token failed: %w", err)
 	}
 
 	if len(itemNo) != 6 {
-		return fmt.Errorf("invalid item no: %s", itemNo)
+		return nil, fmt.Errorf("invalid item no: %s", itemNo)
 	}
 
 	if qty <= 0 {
-		return fmt.Errorf("invalid qty: %d", qty)
+		return nil, fmt.Errorf("invalid qty: %d", qty)
 	}
 
 	if opt == nil {
 		opt, err = NewOrderDomesticStockOption("시장가", 0)
 		if err != nil {
-			return fmt.Errorf("create buy option failed: %w", err)
+			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
 	}
 
 	cano, acntprdtcd, err := parseAccount(c.account)
 	if err != nil {
-		return fmt.Errorf("parse account failed: %w", err)
+		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
 	ordDVSN, err := opt.getDVSN()
 	if err != nil {
-		return fmt.Errorf("get order type failed: %w", err)
+		return nil, fmt.Errorf("get order type failed: %w", err)
 	}
 	ordPrice, err := opt.getOrderPrice()
 	if err != nil {
-		return fmt.Errorf("get order price failed: %w", err)
+		return nil, fmt.Errorf("get order price failed: %w", err)
 	}
 
 	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
@@ -63,60 +65,52 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 		reqBody,
 	)
 	if err != nil {
-		return fmt.Errorf("create request failed: %w", err)
+		return nil, fmt.Errorf("create request failed: %w", err)
 	}
 	res, err := c.oc.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return fmt.Errorf("request failed: %s", res.Status)
+		return nil, fmt.Errorf("request failed: %s", res.Status)
 	}
 	// io.Copy(os.Stdout, res.Body)
-	respBody := mustUnmarshalJsonBody(res.Body)
-	if respBody == nil {
-		return fmt.Errorf("unmarshal response body failed")
-	}
-	if respBody["rt_cd"] != "0" {
-		return fmt.Errorf("response error: %s (%s)", respBody["msg1"], respBody["msg_cd"])
-	}
-
-	return nil
+	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
-func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) error {
+func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
 	err := c.refreshToken()
 	if err != nil {
-		return fmt.Errorf("refresh token failed: %w", err)
+		return nil, fmt.Errorf("refresh token failed: %w", err)
 	}
 
 	if len(itemNo) != 6 {
-		return fmt.Errorf("invalid item no: %s", itemNo)
+		return nil, fmt.Errorf("invalid item no: %s", itemNo)
 	}
 
 	if qty <= 0 {
-		return fmt.Errorf("invalid qty: %d", qty)
+		return nil, fmt.Errorf("invalid qty: %d", qty)
 	}
 
 	if opt == nil {
 		opt, err = NewOrderDomesticStockOption("시장가", 0)
 		if err != nil {
-			return fmt.Errorf("create buy option failed: %w", err)
+			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
 	}
 
 	cano, acntprdtcd, err := parseAccount(c.account)
 	if err != nil {
-		return fmt.Errorf("parse account failed: %w", err)
+		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
 	ordDVSN, err := opt.getDVSN()
 	if err != nil {
-		return fmt.Errorf("get order type failed: %w", err)
+		return nil, fmt.Errorf("get order type failed: %w", err)
 	}
 	ordPrice, err := opt.getOrderPrice()
 	if err != nil {
-		return fmt.Errorf("get order price failed: %w", err)
+		return nil, fmt.Errorf("get order price failed: %w", err)
 	}
 
 	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
@@ -140,26 +134,18 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStoc
 		reqBody,
 	)
 	if err != nil {
-		return fmt.Errorf("create request failed: %w", err)
+		return nil, fmt.Errorf("create request failed: %w", err)
 	}
 	res, err := c.oc.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return fmt.Errorf("request failed: %s", res.Status)
+		return nil, fmt.Errorf("request failed: %s", res.Status)
 	}
 	// io.Copy(os.Stdout, res.Body)
-	respBody := mustUnmarshalJsonBody(res.Body)
-	if respBody == nil {
-		return fmt.Errorf("unmarshal response body failed")
-	}
-	if respBody["rt_cd"] != "0" {
-		return fmt.Errorf("response error: %s (%s)", respBody["msg1"], respBody["msg_cd"])
-	}
-
-	return nil
+	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
 type OrderDomesticStockOption struct {
@@ -292,3 +278,41 @@ var (
 		"중간가FOK":       "24",
 	}
 )
+
+func newOrderResult(resp map[string]any) (*OrderResult, error) {
+	if resp == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+	if resp["rt_cd"] != "0" {
+		return nil, fmt.Errorf("response error: %s (%s)", resp["msg1"], resp["msg_cd"])
+	}
+
+	if output, ok := resp["output"].(map[string]any); ok {
+		ordNo := output["ODNO"].(string)
+		ordTimeStr := output["ORD_TMD"].(string)
+		venue := output["KRX_FWDG_ORD_ORGNO"].(string)
+		if ordNo == "" || ordTimeStr == "" || venue == "" {
+			return nil, fmt.Errorf("response output is nil")
+		}
+
+		ordTimeUnix, err := strconv.ParseInt(ordTimeStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid order time: %s", ordTimeStr)
+		}
+		ordTime := time.Unix(ordTimeUnix, 0)
+
+		return &OrderResult{
+			No:    ordNo,
+			Time:  ordTime,
+			Venue: venue,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("response output is not a map")
+	}
+}
+
+type OrderResult struct {
+	Venue string    `yaml:"거래소코드"`
+	No    string    `yaml:"주문번호"`
+	Time  time.Time `yaml:"주문시간"`
+}

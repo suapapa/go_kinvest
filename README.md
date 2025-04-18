@@ -27,8 +27,8 @@ This package read following envs for the API calls:
 - [ ] /oauth2/Approval (post) : 웹소켓접속키발급
 - [x] /oauth2/tokenP (post) : 토큰발급(선물옵션)
 - [ ] /oauth2/revokeP (post) : 토큰폐기(선물옵션)
-- [x] /uapi/hashkey (post) : 해쉬키생성(선물옵션)
-- [ ] /uapi/domestic-stock/v1/trading/order-cash (post) : 주식주문(현금)
+- [ ] /uapi/hashkey (post) : 해쉬키생성(선물옵션)
+- [x] /uapi/domestic-stock/v1/trading/order-cash (post) : 주식주문(현금)
 - [ ] /uapi/domestic-stock/v1/trading/order-credit (post) : 주식주문(신용)
 - [ ] /uapi/domestic-stock/v1/trading/order-rvsecncl (post) : 주식주문(정정취소)
 - [ ] /uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl (get) : 주식정정취소가능주문조회
