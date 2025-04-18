@@ -6,6 +6,6 @@
 
 ```sh
 go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
-oapi-codegen --package=kinvest --generate types -o types.go ../../_ref/openapi/kinvest_prod.yaml
-oapi-codegen --package=kinvest --generate client -o client.go ../../_ref/openapi/kinvest_prod.yaml
+oapi-codegen --package=oapi --generate types -o types.go ../../_ref/openapi/kinvest_prod.yaml
+oapi-codegen --package=oapi --generate client -o client.go ../../_ref/openapi/kinvest_prod.yaml
 ```
