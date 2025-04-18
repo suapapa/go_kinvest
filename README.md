@@ -23,6 +23,9 @@ This package read following envs for the API calls:
 - `KINVEST_APPSECRET` : 한국투자증권 개발자센터에서 발급받은 appsecret
 - `KINVEST_TOKEN_PATH` : 발급받은 토큰을 저장하기 위한 경로. 설정하지 않으면 `./kinvest_access_token.json` 에 저장
 
+## Reference
+- [한국투자 OpenAPI](https://apiportal.koreainvestment.com/apiservice) - API문서
+
 ## TODO
 - [ ] /oauth2/Approval (post) : 웹소켓접속키발급
 - [x] /oauth2/tokenP (post) : 토큰발급(선물옵션)
@@ -258,6 +261,3 @@ This package read following envs for the API calls:
 - [ ] /uapi/domestic-bond/v1/quotations/inquire-ccnl (get) : 장내채권현재가(일별)
 - [ ] /uapi/domestic-bond/v1/quotations/search-bond-info (get) : 장내채권 기본조회
 
-
-## Reference
-- [한국투자 OpenAPI](https://apiportal.koreainvestment.com/apiservice) - API문서

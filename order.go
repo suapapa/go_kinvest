@@ -10,11 +10,6 @@ import (
 )
 
 func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
-	err := c.refreshToken()
-	if err != nil {
-		return nil, fmt.Errorf("refresh token failed: %w", err)
-	}
-
 	if len(itemNo) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", itemNo)
 	}
@@ -24,6 +19,7 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	}
 
 	if opt == nil {
+		var err error
 		opt, err = NewOrderDomesticStockOption("시장가", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
@@ -67,7 +63,7 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	if err != nil {
 		return nil, fmt.Errorf("create request failed: %w", err)
 	}
-	res, err := c.oc.Client.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
@@ -79,14 +75,9 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
-func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
-	err := c.refreshToken()
-	if err != nil {
-		return nil, fmt.Errorf("refresh token failed: %w", err)
-	}
-
-	if len(itemNo) != 6 {
-		return nil, fmt.Errorf("invalid item no: %s", itemNo)
+func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
+	if len(code) != 6 {
+		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
 
 	if qty <= 0 {
@@ -94,6 +85,7 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStoc
 	}
 
 	if opt == nil {
+		var err error
 		opt, err = NewOrderDomesticStockOption("시장가", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
@@ -116,7 +108,7 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStoc
 	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
 		"CANO":         cano,
 		"ACNT_PRDT_CD": acntprdtcd,
-		"PDNO":         itemNo,                 // 종목코드
+		"PDNO":         code,                   // 종목코드
 		"ORD_DVSN":     ordDVSN,                // 주문구분
 		"ORD_QTY":      fmt.Sprintf("%d", qty), // 주문수량
 		"ORD_UNPR":     ordPrice,               // 주문단가 0: 시장가
@@ -136,7 +128,7 @@ func (c *Client) BuyDomesticStock(itemNo string, qty int, opt *OrderDomesticStoc
 	if err != nil {
 		return nil, fmt.Errorf("create request failed: %w", err)
 	}
-	res, err := c.oc.Client.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
@@ -302,9 +294,9 @@ func newOrderResult(resp map[string]any) (*OrderResult, error) {
 		ordTime := time.Unix(ordTimeUnix, 0)
 
 		return &OrderResult{
-			No:    ordNo,
-			Time:  ordTime,
-			Venue: venue,
+			OrderNo:   ordNo,
+			OrderedAt: ordTime,
+			Venue:     venue,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("response output is not a map")
@@ -312,7 +304,7 @@ func newOrderResult(resp map[string]any) (*OrderResult, error) {
 }
 
 type OrderResult struct {
-	Venue string    `yaml:"거래소코드"`
-	No    string    `yaml:"주문번호"`
-	Time  time.Time `yaml:"주문시간"`
+	OrderNo   string    `yaml:"주문번호"`
+	OrderedAt time.Time `yaml:"주문시간"`
+	Venue     string    `yaml:"거래소코드"`
 }

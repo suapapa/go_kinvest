@@ -9,11 +9,6 @@ import (
 
 // GetDomesticAccountBalance retrieves the balance of the domestic account
 func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
-	err := c.refreshToken()
-	if err != nil {
-		return nil, fmt.Errorf("refresh token failed: %w", err)
-	}
-
 	cano, acntprdtcd, err := parseAccount(c.account)
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
@@ -36,7 +31,7 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	resp, err := c.oc.Client.Do(req)
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}

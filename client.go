@@ -166,3 +166,12 @@ func (c *Client) getToken() (*AccessToken, error) {
 		ExpiresIn:   time.Now().Add(time.Duration((data["expires_in"].(float64))) * time.Second),
 	}, nil
 }
+
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	err := c.refreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh token: %w", err)
+	}
+
+	return c.oc.Client.Do(req)
+}
