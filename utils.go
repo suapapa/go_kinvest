@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func mustCreateJsonReader(data map[string]any) *bytes.Reader {
+func mustCreateJsonReader(data any) *bytes.Reader {
 	buff := bytes.NewBuffer(nil)
 	if err := json.NewEncoder(buff).Encode(data); err != nil {
 		panic(err)

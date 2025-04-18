@@ -41,8 +41,6 @@ type Client struct {
 	appKey    string
 	appSecret string
 	token     *AccessToken
-
-	hash string
 }
 
 // NewClient creates a new Kinvest client
@@ -97,12 +95,6 @@ func NewClient(config *ClientConfig) (*Client, error) {
 	if err := c.refreshToken(); err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-
-	hash, err := c.genHashKey()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate hash key: %w", err)
-	}
-	c.hash = hash
 
 	return c, nil
 }
@@ -173,46 +165,4 @@ func (c *Client) getToken() (*AccessToken, error) {
 		AccessToken: data["access_token"].(string),
 		ExpiresIn:   time.Now().Add(time.Duration((data["expires_in"].(float64))) * time.Second),
 	}, nil
-}
-
-func (c *Client) genHashKey() (string, error) {
-	cano, acntprdtcd, err := parseAccount(c.account)
-	if err != nil {
-		return "", fmt.Errorf("parse account failed: %w", err)
-	}
-
-	reqBody := mustCreateJsonReader(map[string]any{
-		"CANO":         *cano,
-		"ACNT_PRDT_CD": *acntprdtcd,
-		"OVRS_EXCG_CD": "SHAA",
-	})
-	req, err := oapi.NewPostUapiHashkeyRequestWithBody(
-		c.oc.Server,
-		&oapi.PostUapiHashkeyParams{
-			ContentType: &jsonContentType,
-			Appkey:      &c.appKey,
-			Appsecret:   &c.appSecret,
-		},
-		jsonContentType,
-		reqBody,
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	resp, err := c.oc.Client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-	ret := mustUnmarshalJsonBody(resp.Body)
-	hash, ok := ret["HASH"].(string)
-	if !ok {
-		return "", fmt.Errorf("unexpected response format: %v", ret)
-	}
-	return hash, nil
 }
