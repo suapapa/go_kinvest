@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/goccy/go-yaml"
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
@@ -66,10 +65,12 @@ func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, 
 	return item, nil
 }
 
+// Empty checks if the item is empty
 func (i *DomesticAccountBalanceItem) Empty() bool {
 	return i == nil || (i.PchsAmt == 0 && i.EvluAmt == 0 && i.EvluPflsAmt == 0 && i.CrdtLndAmt == 0 && i.RealNassAmt == 0)
 }
 
+// DomesticAccountBalance represents the balance of a domestic account
 type DomesticAccountBalance struct {
 	Items                  map[string]*DomesticAccountBalanceItem `yaml:"계좌항목,omitempty"`
 	PchsAmtSmtl            int                                    `yaml:"매입금액합계,omitempty"`
@@ -99,6 +100,7 @@ type DomesticAccountBalance struct {
 	EtprCrdtGrntLoanAmt    int                                    `yaml:"기업신용공예대출금액,omitempty"`
 }
 
+// NewDomesticAccountBalance creates a new DomesticAccountBalance from the response data
 func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBalanceResp) (*DomesticAccountBalance, error) {
 	if data == nil {
 		return nil, fmt.Errorf("data is nil")
@@ -159,15 +161,6 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 		PbstSbscFndsLoanUseAmt: toInt(data.Output2.PbstSbscFndsLoanUseAmt),
 		EtprCrdtGrntLoanAmt:    toInt(data.Output2.EtprCrdtGrntLoanAmt),
 	}, nil
-}
-
-func (b *DomesticAccountBalance) String() string {
-	yb, err := yaml.Marshal(b)
-	if err != nil {
-		type Alias DomesticAccountBalance
-		return fmt.Sprintf("%+v", (*Alias)(b))
-	}
-	return string(yb)
 }
 
 var (

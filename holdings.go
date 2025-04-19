@@ -9,6 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
+// GetDomesticHoldings retrieves the domestic stock holdings for the given account.
 func (c *Client) GetDomesticHoldings(ctx context.Context, opt *GetDomesticHoldingsOptions) (*GetDomesticHoldingsResult, error) {
 	if opt == nil {
 		var err error
@@ -48,6 +49,7 @@ func (c *Client) GetDomesticHoldings(ctx context.Context, opt *GetDomesticHoldin
 	return newGetDomesticHoldingsResult(c, opt, mustUnmarshalJsonBody(resp.Body))
 }
 
+// GetDomesticHoldingsOptions represents the options for retrieving domestic stock holdings.
 type GetDomesticHoldingsOptions struct {
 	TradingSessionType    string `yaml:"거래세션유형,omitempty"` // 기본, 시간외단일가, NXT정규장
 	QueryType             string `yaml:"조회구분,omitempty"`   // 대출일별, 종목별
@@ -57,6 +59,7 @@ type GetDomesticHoldingsOptions struct {
 	CtxAreaFK, CtxAreaNK string
 }
 
+// NewGetDomesticHoldingsOptions creates a new GetDomesticHoldingsOptions with the specified trading session type and query type.
 func NewGetDomesticHoldingsOptions(tradingSessionType, queryType string) (*GetDomesticHoldingsOptions, error) {
 	if _, ok := tradingSessionTypeCode[tradingSessionType]; !ok {
 		var tradingSessionTypes []string
@@ -197,6 +200,7 @@ func newGetDomesticHoldingsResult(c *Client, opt *GetDomesticHoldingsOptions, da
 	return ret, nil
 }
 
+// GetDomesticHoldingsResult represents the result of retrieving domestic stock holdings.
 type GetDomesticHoldingsResult struct {
 	c                    *Client
 	opt                  *GetDomesticHoldingsOptions
@@ -205,6 +209,7 @@ type GetDomesticHoldingsResult struct {
 	Balances             []*Balance `yaml:"balances,omitempty"`
 }
 
+// GetNext retrieves the next page of domestic stock holdings.
 func (r *GetDomesticHoldingsResult) GetNext(ctx context.Context) (*GetDomesticHoldingsResult, error) {
 	if r.ctxAreaFK == "" || r.ctxAreaNK == "" {
 		return nil, fmt.Errorf("no next page")
@@ -216,6 +221,7 @@ func (r *GetDomesticHoldingsResult) GetNext(ctx context.Context) (*GetDomesticHo
 	return r.c.GetDomesticHoldings(ctx, &opt)
 }
 
+// Stock represents a stock holding.
 type Stock struct {
 	Code              string    `yaml:"종목번호"`
 	Name              string    `yaml:"종목명"`
@@ -244,6 +250,7 @@ type Stock struct {
 	LoanPrice         float64   `yaml:"주식대출단가,omitempty"`
 }
 
+// Balance represents the balance information.
 type Balance struct {
 	TotalDeposit                  int     `yaml:"예수금 총액,omitempty"`
 	NextSettlementAmount          int     `yaml:"익일정산금액,omitempty"`  // D+1 예수금

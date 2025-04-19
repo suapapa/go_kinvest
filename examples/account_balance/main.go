@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/goccy/go-yaml"
 	kinvest "github.com/suapapa/go_kinvest"
 )
 
@@ -18,5 +18,9 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%s\n", bal)
+	y, err := yaml.Marshal(bal)
+	if err != nil {
+		panic(err)
+	}
+	println(string(y))
 }

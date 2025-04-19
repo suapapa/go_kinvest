@@ -15,9 +15,6 @@ func main() {
 
 	res, err := kc.GetDomesticHoldings(context.Background(), nil)
 	if err != nil {
-		// for unwrappedErr := err; unwrappedErr != nil; unwrappedErr = errors.Unwrap(unwrappedErr) {
-		// 	fmt.Println("Error:", unwrappedErr)
-		// }
 		panic(err)
 	}
 	y, err := yaml.Marshal(res)

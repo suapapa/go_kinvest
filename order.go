@@ -12,6 +12,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
+// SellDomesticStock sells domestic(KRX) stock.
 func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
@@ -48,7 +49,6 @@ func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, op
 			"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
 			"SLL_TYPE":     opt.getSellTypeCode(),        // 매도유형
 		},
-		// fixCodeLen,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
@@ -58,6 +58,7 @@ func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, op
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
+// BuyDomesticStock buys domestic(KRX) stock.
 func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
@@ -93,7 +94,6 @@ func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt
 			"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
 			"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
 		},
-		// fixCodeLen,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
@@ -103,6 +103,7 @@ func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
+// OrderDomesticStockOptions is the options for domestic stock order.
 type OrderDomesticStockOptions struct {
 	Type     string // 주문구분
 	Price    int    // 주문단가
@@ -133,6 +134,7 @@ func NewOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomes
 	}, nil
 }
 
+// SetSellType sets the sell type for the order.
 func (o *OrderDomesticStockOptions) SetSellType(sellType string) {
 	switch sellType {
 	case "일반매도", "임의매도", "대차매도":
@@ -243,6 +245,7 @@ func newOrderResult(data map[string]any) (*OrderResult, error) {
 	return nil, fmt.Errorf("response output is not a map")
 }
 
+// OrderResult is the result of the order.
 type OrderResult struct {
 	OrderNo   string    `yaml:"주문번호"`
 	OrderedAt time.Time `yaml:"주문시간"`

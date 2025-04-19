@@ -45,8 +45,6 @@ type Client struct {
 	appKey    string
 	appSecret string
 	token     *AccessToken
-
-	reqEditors []oapi.RequestEditorFn
 }
 
 // NewClient creates a new Kinvest client
@@ -180,40 +178,6 @@ func (c *Client) getToken() (*AccessToken, error) {
 		AccessToken: data["access_token"].(string),
 		ExpiresIn:   time.Now().Add(time.Duration((data["expires_in"].(float64))) * time.Second),
 	}, nil
-}
-
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	if req == nil {
-		return nil, fmt.Errorf("request is nil")
-	}
-
-	for _, editor := range c.reqEditors {
-		if err := editor(context.Background(), req); err != nil {
-			return nil, fmt.Errorf("failed to edit request: %w", err)
-		}
-	}
-
-	err := c.refreshToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to refresh token: %w", err)
-	}
-
-	res, err := c.oc.Client.Do(req)
-	if err != nil || (res != nil && res.StatusCode != http.StatusOK) {
-		if res != nil {
-			defer res.Body.Close()
-			data := mustUnmarshalJsonBody(res.Body)
-			if data["rt_cd"].(string) != "0" {
-				return nil, fmt.Errorf(
-					"bad error code - %d: %s (%s)",
-					res.StatusCode,
-					data["msg1"].(string),
-					data["msg_cd"].(string),
-				)
-			}
-		}
-	}
-	return res, nil
 }
 
 func fixCodeLen(ctx context.Context, req *http.Request) error {
