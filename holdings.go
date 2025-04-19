@@ -1,6 +1,7 @@
 package kinvest
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -8,13 +9,22 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticHoldings(opt *GetDomesticHoldingsOptions) (*GetDomesticHoldingsResult, error) {
+func (c *Client) GetDomesticHoldings(ctx context.Context, opt *GetDomesticHoldingsOptions) (*GetDomesticHoldingsResult, error) {
+	if opt == nil {
+		var err error
+		opt, err = NewGetDomesticHoldingsOptions("기본", "종목별")
+		if err != nil {
+			return nil, fmt.Errorf("create get domestic holdings option failed: %w", err)
+		}
+	}
+
 	cano, acntprdtcd, err := parseAccount(c.account)
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
-	req, err := oapi.NewGetUapiDomesticStockV1TradingInquireBalanceRequest(
-		c.oc.Server,
+
+	resp, err := c.oc.GetUapiDomesticStockV1TradingInquireBalance(
+		ctx,
 		&oapi.GetUapiDomesticStockV1TradingInquireBalanceParams{
 			CANO:              cano,
 			ACNTPRDTCD:        acntprdtcd,
@@ -31,17 +41,9 @@ func (c *Client) GetDomesticHoldings(opt *GetDomesticHoldingsOptions) (*GetDomes
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	resp, err := c.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to do request: %w", err)
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to get holdings: %s", resp.Status)
-	}
 
 	return newGetDomesticHoldingsResult(c, opt, mustUnmarshalJsonBody(resp.Body))
 }
@@ -55,7 +57,7 @@ type GetDomesticHoldingsOptions struct {
 	CtxAreaFK, CtxAreaNK string
 }
 
-func NewGetDomesticHoldingsResultOptions(tradingSessionType, queryType string) (*GetDomesticHoldingsOptions, error) {
+func NewGetDomesticHoldingsOptions(tradingSessionType, queryType string) (*GetDomesticHoldingsOptions, error) {
 	if _, ok := tradingSessionTypeCode[tradingSessionType]; !ok {
 		var tradingSessionTypes []string
 		for k := range tradingSessionTypeCode {
@@ -203,7 +205,7 @@ type GetDomesticHoldingsResult struct {
 	Balances             []*Balance `yaml:"balances,omitempty"`
 }
 
-func (r *GetDomesticHoldingsResult) GetNext() (*GetDomesticHoldingsResult, error) {
+func (r *GetDomesticHoldingsResult) GetNext(ctx context.Context) (*GetDomesticHoldingsResult, error) {
 	if r.ctxAreaFK == "" || r.ctxAreaNK == "" {
 		return nil, fmt.Errorf("no next page")
 	}
@@ -211,7 +213,7 @@ func (r *GetDomesticHoldingsResult) GetNext() (*GetDomesticHoldingsResult, error
 	opt.CtxAreaFK = r.ctxAreaFK
 	opt.CtxAreaNK = r.ctxAreaNK
 
-	return r.c.GetDomesticHoldings(&opt)
+	return r.c.GetDomesticHoldings(ctx, &opt)
 }
 
 type Stock struct {

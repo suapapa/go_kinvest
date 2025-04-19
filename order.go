@@ -1,6 +1,9 @@
+// 주식주문(현금)
+
 package kinvest
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,62 +12,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
-	if len(itemNo) != 6 {
-		return nil, fmt.Errorf("invalid item no: %s", itemNo)
-	}
-
-	if qty <= 0 {
-		return nil, fmt.Errorf("invalid qty: %d", qty)
-	}
-
-	if opt == nil {
-		var err error
-		opt, err = NewOrderDomesticStockOptions("시장가", 0)
-		if err != nil {
-			return nil, fmt.Errorf("create buy option failed: %w", err)
-		}
-	}
-
-	cano, acntprdtcd, err := parseAccount(c.account)
-	if err != nil {
-		return nil, fmt.Errorf("parse account failed: %w", err)
-	}
-
-	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
-		"CANO":         cano,
-		"ACNT_PRDT_CD": acntprdtcd,
-		"PDNO":         itemNo,                       // 종목코드
-		"ORD_DVSN":     opt.getDVSN(),                // 주문구분
-		"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
-		"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
-		"SLL_TYPE":     opt.getSellTypeCode(),        // 매도유형
-	})
-
-	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
-		c.oc.Server,
-		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
-			TrId: ptr("TTTC0801U"),
-		},
-		jsonContentType,
-		reqBody,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("create request failed: %w", err)
-	}
-	res, err := c.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("request failed: %s", res.Status)
-	}
-	// io.Copy(os.Stdout, res.Body)
-	return newOrderResult(mustUnmarshalJsonBody(res.Body))
-}
-
-func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
+func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -86,38 +34,72 @@ func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockO
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
 
-	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
-		"CANO":         cano,
-		"ACNT_PRDT_CD": acntprdtcd,
-		"PDNO":         code,                         // 종목코드
-		"ORD_DVSN":     opt.getDVSN(),                // 주문구분
-		"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
-		"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
-	})
-	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
-		c.oc.Server,
+	res, err := c.oc.PostUapiDomesticStockV1TradingOrderCash(
+		ctx,
 		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
-			// ContentType: &jsonContentType,
-			// Authorization: c.token.Authorization(),
-			// Appkey:        &c.appKey,
-			// Appsecret:     &c.appSecret,
-			TrId: ptr("TTTC0802U"),
+			TrId: ptr("TTTC0801U"),
 		},
-		jsonContentType,
-		reqBody,
+		oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
+			"CANO":         *cano,
+			"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
+			"PDNO":         code,                         // 종목코드
+			"ORD_DVSN":     opt.getDVSN(),                // 주문구분
+			"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
+			"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
+			"SLL_TYPE":     opt.getSellTypeCode(),        // 매도유형
+		},
+		// fixCodeLen,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("create request failed: %w", err)
-	}
-	res, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("request failed: %s", res.Status)
+
+	return newOrderResult(mustUnmarshalJsonBody(res.Body))
+}
+
+func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
+	if len(code) != 6 {
+		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
-	// io.Copy(os.Stdout, res.Body)
+
+	if qty <= 0 {
+		return nil, fmt.Errorf("invalid qty: %d", qty)
+	}
+
+	if opt == nil {
+		var err error
+		opt, err = NewOrderDomesticStockOptions("시장가", 0)
+		if err != nil {
+			return nil, fmt.Errorf("create buy option failed: %w", err)
+		}
+	}
+
+	cano, acntprdtcd, err := parseAccount(c.account)
+	if err != nil {
+		return nil, fmt.Errorf("parse account failed: %w", err)
+	}
+
+	res, err := c.oc.PostUapiDomesticStockV1TradingOrderCash(
+		ctx,
+		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
+			TrId: ptr("TTTC0802U"),
+		},
+		oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
+			"CANO":         *cano,
+			"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
+			"PDNO":         code,                         // 종목코드
+			"ORD_DVSN":     opt.getDVSN(),                // 주문구분
+			"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
+			"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
+		},
+		// fixCodeLen,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer res.Body.Close()
+
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
@@ -200,16 +182,6 @@ var dvsnCodes = orderType{
 	"스톱지정가":        "22",
 	"중간가IOC":       "23",
 	"중간가FOK":       "24",
-}
-
-func (o *OrderDomesticStockOptions) getOrderPrice() (string, error) {
-	if o.Price == 0 {
-		return "0", nil
-	}
-	if o.Price < 0 {
-		return "", fmt.Errorf("order price is negative: %d", o.Price)
-	}
-	return fmt.Sprintf("%d", o.Price), nil
 }
 
 func (o *OrderDomesticStockOptions) getSellTypeCode() string {

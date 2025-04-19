@@ -36,7 +36,7 @@ This package read following envs for the API calls:
 - [ ] /uapi/domestic-stock/v1/trading/order-rvsecncl (post) : 주식주문(정정취소)
 - [ ] /uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl (get) : 주식정정취소가능주문조회
 - [ ] /uapi/domestic-stock/v1/trading/inquire-daily-ccld (get) : 주식일별주문체결조회
-- [ ] /uapi/domestic-stock/v1/trading/inquire-balance (get) : 주식잔고조회
+- [x] /uapi/domestic-stock/v1/trading/inquire-balance (get) : 주식잔고조회
 - [ ] /uapi/domestic-stock/v1/trading/inquire-psbl-order (get) : 매수가능조회
 - [ ] /uapi/domestic-stock/v1/trading/order-resv (post) : 주식예약주문
 - [ ] /uapi/domestic-stock/v1/trading/order-resv-rvsecncl (post) : 주식예약주문정정취소(정정)

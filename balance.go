@@ -1,6 +1,9 @@
+// 주식잔고조회
+
 package kinvest
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/goccy/go-yaml"
@@ -8,13 +11,14 @@ import (
 )
 
 // GetDomesticAccountBalance retrieves the balance of the domestic account
-func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
+func (c *Client) GetDomesticAccountBalance(ctx context.Context) (*DomesticAccountBalance, error) {
 	cano, acntprdtcd, err := parseAccount(c.account)
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
-	req, err := oapi.NewGetUapiDomesticStockV1TradingInquireAccountBalanceRequest(
-		c.oc.Server,
+
+	resp, err := c.oc.GetUapiDomesticStockV1TradingInquireAccountBalance(
+		ctx,
 		&oapi.GetUapiDomesticStockV1TradingInquireAccountBalanceParams{
 			CANO:           cano,
 			ACNTPRDTCD:     acntprdtcd,
@@ -24,24 +28,13 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	resp, err := c.Do(req)
-	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
 
 	respData := &uapiDomesticStockV1TradingInquireAccountBalanceResp{}
 	if err := unmarshalJsonBody(resp.Body, respData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	if respData.RtCd != "0" {
-		return nil, fmt.Errorf("response error: %s (%s)", respData.Msg1, respData.MsgCd)
 	}
 
 	return NewDomesticAccountBalance(respData)

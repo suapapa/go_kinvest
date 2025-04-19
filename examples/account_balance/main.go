@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	kinvest "github.com/suapapa/go_kinvest"
@@ -12,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	bal, err := kc.GetDomesticAccountBalance()
+	bal, err := kc.GetDomesticAccountBalance(context.Background())
 	if err != nil {
 		panic(err)
 	}

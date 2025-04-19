@@ -12,12 +12,12 @@ import (
 	"time"
 )
 
-func mustCreateJsonReader(data any) *bytes.Reader {
+func mustCreateJsonReader(data any) io.ReadCloser {
 	buff := bytes.NewBuffer(nil)
 	if err := json.NewEncoder(buff).Encode(data); err != nil {
 		panic(err)
 	}
-	return bytes.NewReader(buff.Bytes())
+	return io.NopCloser(bytes.NewReader(buff.Bytes()))
 }
 
 func mustUnmarshalJsonBody(body io.Reader) map[string]any {

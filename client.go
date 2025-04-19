@@ -1,8 +1,11 @@
 package kinvest
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -83,37 +86,22 @@ func NewClient(config *ClientConfig) (*Client, error) {
 		return nil, fmt.Errorf("invalid config: appKey, appSecret, account must be set")
 	}
 
-	fixCodeLen := func(ctx context.Context, req *http.Request) error {
-		// find query parm "ACNT_PRDTCD" and change its value's len to 2. e. g. "0" -> "01"
-		codes := []string{"ACNT_PRDT_CD", "INQR_DVSN", "UNPR_DVSN", "PRCS_DVSN"}
-		for _, code := range codes {
-			val := req.URL.Query().Get(code)
-			if val == "" {
-				continue
-			} else if len(val) == 1 {
-				val = "0" + val
-			}
-			query := req.URL.Query()
-			query.Set(code, val)
-			req.URL.RawQuery = query.Encode()
-		}
-
-		return nil
-	}
 	fillHeader := func(ctx context.Context, req *http.Request) error {
-		req.Header.Set("content-type", jsonContentType)
+		// req.Header.Set("content-type", jsonContentType)
 		req.Header.Set("authorization", c.token.Authorization())
 		req.Header.Set("appkey", c.appKey)
 		req.Header.Set("appsecret", c.appSecret)
 
 		return nil
 	}
-	c.reqEditors = []oapi.RequestEditorFn{
-		fixCodeLen, // fix bugs in the OpenApi doc, kinvest_prod.yaml
-		fillHeader, // fill authorization header
-	}
+	// c.reqEditors = []oapi.RequestEditorFn{
+	// 	fixCodeLen, // fix bugs in the OpenApi doc, kinvest_prod.yaml
+	// 	fillHeader, // fill authorization header
+	// }
 	c.oc, err = oapi.NewClient(
 		prodAddr,
+		oapi.WithRequestEditorFn(fixCodeLen),
+		oapi.WithRequestEditorFn(fillHeader),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oapi client: %w", err)
@@ -195,6 +183,10 @@ func (c *Client) getToken() (*AccessToken, error) {
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is nil")
+	}
+
 	for _, editor := range c.reqEditors {
 		if err := editor(context.Background(), req); err != nil {
 			return nil, fmt.Errorf("failed to edit request: %w", err)
@@ -206,5 +198,80 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("failed to refresh token: %w", err)
 	}
 
-	return c.oc.Client.Do(req)
+	res, err := c.oc.Client.Do(req)
+	if err != nil || (res != nil && res.StatusCode != http.StatusOK) {
+		if res != nil {
+			defer res.Body.Close()
+			data := mustUnmarshalJsonBody(res.Body)
+			if data["rt_cd"].(string) != "0" {
+				return nil, fmt.Errorf(
+					"bad error code - %d: %s (%s)",
+					res.StatusCode,
+					data["msg1"].(string),
+					data["msg_cd"].(string),
+				)
+			}
+		}
+	}
+	return res, nil
+}
+
+func fixCodeLen(ctx context.Context, req *http.Request) error {
+	codes := []string{"ACNT_PRDT_CD", "INQR_DVSN", "UNPR_DVSN", "PRCS_DVSN"}
+
+	// find query parm "ACNT_PRDTCD" and change its value's len to 2. e. g. "0" -> "01"
+	for _, code := range codes {
+		val := req.URL.Query().Get(code)
+		if val == "" {
+			continue
+		} else if len(val) == 1 {
+			val = "0" + val
+			query := req.URL.Query()
+			query.Set(code, val)
+			req.URL.RawQuery = query.Encode()
+		}
+	}
+
+	// fix code len in body
+	// from : {"ACNT_PRDT_CD":1,"CANO":"64632233","ORD_DVSN":"01","ORD_QTY":"1","ORD_UNPR":"0","PDNO":"005380"}
+	// to : {"ACNT_PRDT_CD":"01","CANO":"64632233","ORD_DVSN":"01","ORD_QTY":"1","ORD_UNPR":"0","PDNO":"005380"}
+	var bodyData map[string]any
+	if req.Body == nil {
+	} else {
+		err := json.NewDecoder(req.Body).Decode(&bodyData)
+		if err != nil {
+			return fmt.Errorf("failed to decode request body: %w", err)
+		}
+		req.Body.Close()
+
+		for k, v := range bodyData {
+			for _, code := range codes {
+				if k == code {
+					if val, ok := v.(string); ok {
+						switch len(val) {
+						case 1:
+							bodyData[k] = "0" + val
+						case 2:
+							bodyData[k] = val
+						default:
+							return fmt.Errorf("invalid code len for %s: %s", k, val)
+						}
+					} else if val, ok := v.(float64); ok && len(fmt.Sprintf("%d", int(val))) == 1 {
+						bodyData[k] = fmt.Sprintf("%02d", int(val))
+					} else {
+						bodyData[k] = v
+					}
+				}
+			}
+		}
+
+		bodyBytes, err := json.Marshal(bodyData)
+		if err != nil {
+			return fmt.Errorf("failed to encode request body: %w", err)
+		}
+		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		req.ContentLength = int64(len(bodyBytes))
+	}
+
+	return nil
 }
