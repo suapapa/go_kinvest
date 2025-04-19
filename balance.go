@@ -13,19 +13,18 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
-	trID := "CTRP6548R"
 	req, err := oapi.NewGetUapiDomesticStockV1TradingInquireAccountBalanceRequest(
 		c.oc.Server,
 		&oapi.GetUapiDomesticStockV1TradingInquireAccountBalanceParams{
 			CANO:           cano,
 			ACNTPRDTCD:     acntprdtcd,
-			INQRDVSN1:      &emptyStr,
-			BSPRBFDTAPLYYN: &emptyStr,
-			ContentType:    &jsonContentType,
-			Authorization:  c.token.Authorization(),
-			Appkey:         &c.appKey,
-			Appsecret:      &c.appSecret,
-			TrId:           &trID,
+			INQRDVSN1:      ptr(""),
+			BSPRBFDTAPLYYN: ptr(""),
+			// ContentType:    &jsonContentType,
+			// Authorization:  c.token.Authorization(),
+			// Appkey:         &c.appKey,
+			// Appsecret:      &c.appSecret,
+			TrId: ptr("CTRP6548R"),
 		},
 	)
 	if err != nil {
@@ -67,12 +66,12 @@ func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, 
 	}
 
 	item := &DomesticAccountBalanceItem{
-		PchsAmt:     strToInt(data.PchsAmt),
-		EvluAmt:     strToInt(data.EvluAmt),
-		EvluPflsAmt: strToInt(data.EvluPflsAmt),
-		CrdtLndAmt:  strToInt(data.CrdtLndAmt),
-		RealNassAmt: strToInt(data.RealNassAmt),
-		WholWeitRt:  strToFloat(data.WholWeitRt),
+		PchsAmt:     toInt(data.PchsAmt),
+		EvluAmt:     toInt(data.EvluAmt),
+		EvluPflsAmt: toInt(data.EvluPflsAmt),
+		CrdtLndAmt:  toInt(data.CrdtLndAmt),
+		RealNassAmt: toInt(data.RealNassAmt),
+		WholWeitRt:  toFloat(data.WholWeitRt),
 	}
 
 	return item, nil
@@ -145,31 +144,31 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 
 	return &DomesticAccountBalance{
 		Items:                  bItems,
-		PchsAmtSmtl:            strToInt(data.Output2.PchsAmtSmtl),
-		NassTotAmt:             strToInt(data.Output2.NassTotAmt),
-		LoanAmtSmtl:            strToInt(data.Output2.LoanAmtSmtl),
-		EvluPflsAmtSmtl:        strToInt(data.Output2.EvluPflsAmtSmtl),
-		EvluAmtSmtl:            strToInt(data.Output2.EvluAmtSmtl),
-		TotAsstAmt:             strToInt(data.Output2.TotAsstAmt),
-		TotLndaTotUlstLnda:     strToInt(data.Output2.TotLndaTotUlstLnda),
-		CmaAutoLoanAmt:         strToInt(data.Output2.CmaAutoLoanAmt),
-		TotMglnAmt:             strToInt(data.Output2.TotMglnAmt),
-		StlnEvluAmt:            strToInt(data.Output2.StlnEvluAmt),
-		CrdtFncgAmt:            strToInt(data.Output2.CrdtFncgAmt),
-		OclAplLoanAmt:          strToInt(data.Output2.OclAplLoanAmt),
-		PldgStupAmt:            strToInt(data.Output2.PldgStupAmt),
-		FrcrEvluTota:           strToInt(data.Output2.FrcrEvluTota),
-		TotDnclAmt:             strToInt(data.Output2.TotDnclAmt),
-		CmaEvluAmt:             strToInt(data.Output2.CmaEvluAmt),
-		DnclAmt:                strToInt(data.Output2.DnclAmt),
-		TotSbstAmt:             strToInt(data.Output2.TotSbstAmt),
-		ThdtRcvbAmt:            strToInt(data.Output2.ThdtRcvbAmt),
-		OvrsStckEvluAmt1:       strToInt(data.Output2.OvrsStckEvluAmt1),
-		OvrsBondEvluAmt:        strToInt(data.Output2.OvrsBondEvluAmt),
-		MmfCmaMggeLoanAmt:      strToInt(data.Output2.MmfCmaMggeLoanAmt),
-		SbscDnclAmt:            strToInt(data.Output2.SbscDnclAmt),
-		PbstSbscFndsLoanUseAmt: strToInt(data.Output2.PbstSbscFndsLoanUseAmt),
-		EtprCrdtGrntLoanAmt:    strToInt(data.Output2.EtprCrdtGrntLoanAmt),
+		PchsAmtSmtl:            toInt(data.Output2.PchsAmtSmtl),
+		NassTotAmt:             toInt(data.Output2.NassTotAmt),
+		LoanAmtSmtl:            toInt(data.Output2.LoanAmtSmtl),
+		EvluPflsAmtSmtl:        toInt(data.Output2.EvluPflsAmtSmtl),
+		EvluAmtSmtl:            toInt(data.Output2.EvluAmtSmtl),
+		TotAsstAmt:             toInt(data.Output2.TotAsstAmt),
+		TotLndaTotUlstLnda:     toInt(data.Output2.TotLndaTotUlstLnda),
+		CmaAutoLoanAmt:         toInt(data.Output2.CmaAutoLoanAmt),
+		TotMglnAmt:             toInt(data.Output2.TotMglnAmt),
+		StlnEvluAmt:            toInt(data.Output2.StlnEvluAmt),
+		CrdtFncgAmt:            toInt(data.Output2.CrdtFncgAmt),
+		OclAplLoanAmt:          toInt(data.Output2.OclAplLoanAmt),
+		PldgStupAmt:            toInt(data.Output2.PldgStupAmt),
+		FrcrEvluTota:           toInt(data.Output2.FrcrEvluTota),
+		TotDnclAmt:             toInt(data.Output2.TotDnclAmt),
+		CmaEvluAmt:             toInt(data.Output2.CmaEvluAmt),
+		DnclAmt:                toInt(data.Output2.DnclAmt),
+		TotSbstAmt:             toInt(data.Output2.TotSbstAmt),
+		ThdtRcvbAmt:            toInt(data.Output2.ThdtRcvbAmt),
+		OvrsStckEvluAmt1:       toInt(data.Output2.OvrsStckEvluAmt1),
+		OvrsBondEvluAmt:        toInt(data.Output2.OvrsBondEvluAmt),
+		MmfCmaMggeLoanAmt:      toInt(data.Output2.MmfCmaMggeLoanAmt),
+		SbscDnclAmt:            toInt(data.Output2.SbscDnclAmt),
+		PbstSbscFndsLoanUseAmt: toInt(data.Output2.PbstSbscFndsLoanUseAmt),
+		EtprCrdtGrntLoanAmt:    toInt(data.Output2.EtprCrdtGrntLoanAmt),
 	}, nil
 }
 

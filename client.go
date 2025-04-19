@@ -1,6 +1,7 @@
 package kinvest
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -80,13 +81,35 @@ func NewClient(config *ClientConfig) (*Client, error) {
 		return nil, fmt.Errorf("invalid config: appKey, appSecret, account must be set")
 	}
 
-	// addReqAuthHeader := func(ctx context.Context, req *http.Request) error {
-	// 	return nil
-	// }
+	fixCodeLen := func(ctx context.Context, req *http.Request) error {
+		// find query parm "ACNT_PRDTCD" and change its value's len to 2. e. g. "0" -> "01"
+		codes := []string{"ACNT_PRDT_CD", "INQR_DVSN", "UNPR_DVSN", "PRCS_DVSN"}
+		for _, code := range codes {
+			val := req.URL.Query().Get(code)
+			if val == "" {
+				continue
+			} else if len(val) == 1 {
+				val = "0" + val
+			}
+			query := req.URL.Query()
+			query.Set(code, val)
+			req.URL.RawQuery = query.Encode()
+		}
 
+		return nil
+	}
+	fillHeader := func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("content-type", jsonContentType)
+		req.Header.Set("authorization", c.token.Authorization())
+		req.Header.Set("appkey", c.appKey)
+		req.Header.Set("appsecret", c.appSecret)
+
+		return nil
+	}
 	c.oc, err = oapi.NewClient(
 		prodAddr,
-		// oapi.WithRequestEditorFn(addReqAuthHeader),
+		oapi.WithRequestEditorFn(fixCodeLen),
+		oapi.WithRequestEditorFn(fillHeader),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oapi client: %w", err)

@@ -12,9 +12,7 @@ const (
 
 var (
 	jsonContentType = "application/json; charset=utf-8"
-	emptyStr        = ""
-
-	apiEnvs = map[string]string{
+	apiEnvs         = map[string]string{
 		"APPKEY":     "",
 		"APPSECRET":  "",
 		"ACCOUNT":    "",

@@ -61,7 +61,7 @@ func (t *AccessToken) IsExpired() bool {
 	return expiresIn.Before(time.Now())
 }
 
-func (t *AccessToken) Authorization() *string {
+func (t *AccessToken) Authorization() string {
 	ret := t.TokenType + " " + t.AccessToken
-	return &ret
+	return ret
 }

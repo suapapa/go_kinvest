@@ -5274,7 +5274,7 @@ type GetUapiDomesticStockV1TradingInquireAccountBalanceParams struct {
 	CANO *string `form:"CANO,omitempty" json:"CANO,omitempty"`
 
 	// ACNTPRDTCD 계좌번호 체계(8-2)의 뒤 2자리
-	ACNTPRDTCD *string `form:"ACNT_PRDT_CD,omitempty" json:"ACNT_PRDT_CD,omitempty"`
+	ACNTPRDTCD *int `form:"ACNT_PRDT_CD,omitempty" json:"ACNT_PRDT_CD,omitempty"`
 
 	// INQRDVSN1 조회구분1(공백입력)
 	INQRDVSN1 *string `form:"INQR_DVSN_1,omitempty" json:"INQR_DVSN_1,omitempty"`

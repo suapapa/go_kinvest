@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
+func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
 	if len(itemNo) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", itemNo)
 	}
@@ -20,7 +20,7 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 
 	if opt == nil {
 		var err error
-		opt, err = NewOrderDomesticStockOption("시장가", 0)
+		opt, err = NewOrderDomesticStockOptions("시장가", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
@@ -30,32 +30,25 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
-	ordDVSN, err := opt.getDVSN()
-	if err != nil {
-		return nil, fmt.Errorf("get order type failed: %w", err)
-	}
-	ordPrice, err := opt.getOrderPrice()
-	if err != nil {
-		return nil, fmt.Errorf("get order price failed: %w", err)
-	}
 
 	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
 		"CANO":         cano,
 		"ACNT_PRDT_CD": acntprdtcd,
-		"PDNO":         itemNo,                 // 종목코드
-		"ORD_DVSN":     ordDVSN,                // 주문구분
-		"ORD_QTY":      fmt.Sprintf("%d", qty), // 주문수량
-		"ORD_UNPR":     ordPrice,               // 주문단가 0: 시장가
-		"SLL_TYPE":     opt.getSllType(),       // 매도유형
+		"PDNO":         itemNo,                       // 종목코드
+		"ORD_DVSN":     opt.getDVSN(),                // 주문구분
+		"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
+		"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
+		"SLL_TYPE":     opt.getSellTypeCode(),        // 매도유형
 	})
+
 	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
 		c.oc.Server,
 		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
-			ContentType:   &jsonContentType,
-			Authorization: c.token.Authorization(),
-			Appkey:        &c.appKey,
-			Appsecret:     &c.appSecret,
-			TrId:          &trIDSellCash,
+			// ContentType: &jsonContentType,
+			// Authorization: c.token.Authorization(),
+			// Appkey:        &c.appKey,
+			// Appsecret:     &c.appSecret,
+			TrId: ptr("TTTC0801U"),
 		},
 		jsonContentType,
 		reqBody,
@@ -75,7 +68,7 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
-func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockOption) (*OrderResult, error) {
+func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockOptions) (*OrderResult, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -86,7 +79,7 @@ func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockO
 
 	if opt == nil {
 		var err error
-		opt, err = NewOrderDomesticStockOption("시장가", 0)
+		opt, err = NewOrderDomesticStockOptions("시장가", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
@@ -96,31 +89,23 @@ func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockO
 	if err != nil {
 		return nil, fmt.Errorf("parse account failed: %w", err)
 	}
-	ordDVSN, err := opt.getDVSN()
-	if err != nil {
-		return nil, fmt.Errorf("get order type failed: %w", err)
-	}
-	ordPrice, err := opt.getOrderPrice()
-	if err != nil {
-		return nil, fmt.Errorf("get order price failed: %w", err)
-	}
 
 	reqBody := mustCreateJsonReader(oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
 		"CANO":         cano,
 		"ACNT_PRDT_CD": acntprdtcd,
-		"PDNO":         code,                   // 종목코드
-		"ORD_DVSN":     ordDVSN,                // 주문구분
-		"ORD_QTY":      fmt.Sprintf("%d", qty), // 주문수량
-		"ORD_UNPR":     ordPrice,               // 주문단가 0: 시장가
+		"PDNO":         code,                         // 종목코드
+		"ORD_DVSN":     opt.getDVSN(),                // 주문구분
+		"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
+		"ORD_UNPR":     fmt.Sprintf("%d", opt.Price), // 주문단가 0: 시장가
 	})
 	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
 		c.oc.Server,
 		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
-			ContentType:   &jsonContentType,
-			Authorization: c.token.Authorization(),
-			Appkey:        &c.appKey,
-			Appsecret:     &c.appSecret,
-			TrId:          &trIDBuyCash,
+			// ContentType: &jsonContentType,
+			// Authorization: c.token.Authorization(),
+			// Appkey:        &c.appKey,
+			// Appsecret:     &c.appSecret,
+			TrId: ptr("TTTC0802U"),
 		},
 		jsonContentType,
 		reqBody,
@@ -140,10 +125,10 @@ func (c *Client) BuyDomesticStock(code string, qty int, opt *OrderDomesticStockO
 	return newOrderResult(mustUnmarshalJsonBody(res.Body))
 }
 
-type OrderDomesticStockOption struct {
-	orderType  string // 주문구분
-	orderPrice int    // 주문단가
-	sellType   string // 매도구분 : 일반매도, 임의매도, 대차매도
+type OrderDomesticStockOptions struct {
+	Type     string // 주문구분
+	Price    int    // 주문단가
+	SellType string // 매도구분 : 일반매도, 임의매도, 대차매도
 }
 
 // NewOrderDemesticStockOption creates a new BuytDomesticStockOption.
@@ -155,67 +140,92 @@ type OrderDomesticStockOption struct {
 //	FOK최유리, 장중대량, 장중바스켓, 장개시전 시간외대량, 장개시전 시간외바스켓, 장개시전 금전신탁자사주,
 //	장개시전 자기주식, 시간외대량, 시간외자사주신탁, 시간외대량자기주식, 바스켓, 중간가, 스톱지정가,
 //	중간가IOC, 중간가FOK
-func NewOrderDomesticStockOption(orderType string, orderPrice int) (*OrderDomesticStockOption, error) {
-	if orderType == "" && orderPrice > 0 {
-		orderType = "지정가"
-	} else if orderType == "" && orderPrice == 0 {
-		orderType = "시장가"
-	} else if orderType == "" {
-		return nil, fmt.Errorf("order type is empty")
-	} else if _, ok := dvsnCodes[orderType]; !ok {
-		return nil, fmt.Errorf("order type not found: %s", orderType)
-	} else if orderPrice < 0 {
-		return nil, fmt.Errorf("order price is negative: %d", orderPrice)
+func NewOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomesticStockOptions, error) {
+	if _, ok := dvsnCodes[orderType]; !ok {
+		var orderTypes []string
+		for k := range dvsnCodes {
+			orderTypes = append(orderTypes, k)
+		}
+		return nil, fmt.Errorf("invalid order type: %s, set one of the following: %s", orderType, strings.Join(orderTypes, ", "))
 	}
 
-	return &OrderDomesticStockOption{
-		orderType:  orderType,
-		orderPrice: orderPrice,
+	return &OrderDomesticStockOptions{
+		Type:  orderType,
+		Price: orderPrice,
 	}, nil
 }
 
-func (o *OrderDomesticStockOption) SetSellType(sellType string) {
-	sellType = strings.TrimSpace(sellType)
-	sellType = strings.TrimRight(sellType, "매도")
+func (o *OrderDomesticStockOptions) SetSellType(sellType string) {
 	switch sellType {
-	case "일반", "임의", "대차":
-		o.sellType = sellType + "매도"
+	case "일반매도", "임의매도", "대차매도":
+		o.SellType = sellType
 	default:
-		o.sellType = "일반매도"
+		o.SellType = "일반매도"
 	}
 }
 
-func (o *OrderDomesticStockOption) getDVSN() (string, error) {
-	if o.orderType == "" {
-		return "", fmt.Errorf("order type is empty")
+func (o *OrderDomesticStockOptions) getDVSN() string {
+	if code, ok := dvsnCodes[o.Type]; ok {
+		return code
+	} else {
+		return dvsnCodes["지정가"]
 	}
-	if code, ok := dvsnCodes[o.orderType]; ok {
-		return code, nil
-	}
-
-	return "", fmt.Errorf("order type not found: %s", o.orderType)
 }
 
-func (o *OrderDomesticStockOption) getOrderPrice() (string, error) {
-	if o.orderPrice == 0 {
+var dvsnCodes = orderType{
+	"지정가":          "00",
+	"시장가":          "01",
+	"조건부지정가":       "02",
+	"최유리지정가":       "03",
+	"최우선지정가":       "04",
+	"장전 시간외":       "05",
+	"장후 시간외":       "06",
+	"시간외 단일가":      "07",
+	"경매매":          "65",
+	"자기주식":         "08",
+	"자기주식S-Option": "09",
+	"자기주식금전신탁":     "10",
+	"IOC지정가":       "11", // 즉시체결,잔량취소
+	"IOC시장가":       "13", // 즉시체결,잔량취소
+	"FOK시장가":       "14", // 즉시체결,잔량취소
+	"IOC최유리":       "15", // 즉시체결,잔량취소
+	"FOK최유리":       "16", // 즉시체결,잔량취소
+	"장중대량":         "51",
+	"장중바스켓":        "52",
+	"장개시전 시간외대량":   "62",
+	"장개시전 시간외바스켓":  "63",
+	"장개시전 금전신탁자사주": "67",
+	"장개시전 자기주식":    "69",
+	"시간외대량":        "72",
+	"시간외자사주신탁":     "77",
+	"시간외대량자기주식":    "79",
+	"바스켓":          "80",
+	"중간가":          "21",
+	"스톱지정가":        "22",
+	"중간가IOC":       "23",
+	"중간가FOK":       "24",
+}
+
+func (o *OrderDomesticStockOptions) getOrderPrice() (string, error) {
+	if o.Price == 0 {
 		return "0", nil
 	}
-	if o.orderPrice < 0 {
-		return "", fmt.Errorf("order price is negative: %d", o.orderPrice)
+	if o.Price < 0 {
+		return "", fmt.Errorf("order price is negative: %d", o.Price)
 	}
-	return fmt.Sprintf("%d", o.orderPrice), nil
+	return fmt.Sprintf("%d", o.Price), nil
 }
 
-func (o *OrderDomesticStockOption) getSllType() string {
-	sllTypeCode := map[string]string{
+func (o *OrderDomesticStockOptions) getSellTypeCode() string {
+	sellTypeCode := map[string]string{
 		"일반매도": "01",
 		"임의매도": "02",
 		"대차매도": "05",
 	}
-	if code, ok := sllTypeCode[o.sellType]; ok {
+	if code, ok := sellTypeCode[o.SellType]; ok {
 		return code
 	}
-	return sllTypeCode["일반매도"]
+	return sellTypeCode["일반매도"]
 }
 
 type orderType map[string]string
@@ -233,53 +243,15 @@ func (o orderType) OrdDvsnCode(ot string) (string, error) {
 	return "", fmt.Errorf("order type not found: %s", ot)
 }
 
-var (
-	trIDBuyCash  = "TTTC0802U" // 주식 현금 매수 주문
-	trIDSellCash = "TTTC0801U" // 주식 현금 매도 주문
-	dvsnCodes    = orderType{
-		"지정가":          "00",
-		"시장가":          "01",
-		"조건부지정가":       "02",
-		"최유리지정가":       "03",
-		"최우선지정가":       "04",
-		"장전 시간외":       "05",
-		"장후 시간외":       "06",
-		"시간외 단일가":      "07",
-		"경매매":          "65",
-		"자기주식":         "08",
-		"자기주식S-Option": "09",
-		"자기주식금전신탁":     "10",
-		"IOC지정가":       "11", // 즉시체결,잔량취소
-		"IOC시장가":       "13", // 즉시체결,잔량취소
-		"FOK시장가":       "14", // 즉시체결,잔량취소
-		"IOC최유리":       "15", // 즉시체결,잔량취소
-		"FOK최유리":       "16", // 즉시체결,잔량취소
-		"장중대량":         "51",
-		"장중바스켓":        "52",
-		"장개시전 시간외대량":   "62",
-		"장개시전 시간외바스켓":  "63",
-		"장개시전 금전신탁자사주": "67",
-		"장개시전 자기주식":    "69",
-		"시간외대량":        "72",
-		"시간외자사주신탁":     "77",
-		"시간외대량자기주식":    "79",
-		"바스켓":          "80",
-		"중간가":          "21",
-		"스톱지정가":        "22",
-		"중간가IOC":       "23",
-		"중간가FOK":       "24",
-	}
-)
-
-func newOrderResult(resp map[string]any) (*OrderResult, error) {
-	if resp == nil {
+func newOrderResult(data map[string]any) (*OrderResult, error) {
+	if data == nil {
 		return nil, fmt.Errorf("response is nil")
 	}
-	if resp["rt_cd"] != "0" {
-		return nil, fmt.Errorf("response error: %s (%s)", resp["msg1"], resp["msg_cd"])
+	if data["rt_cd"] != "0" {
+		return nil, fmt.Errorf("response error: %s (%s)", data["msg1"], data["msg_cd"])
 	}
 
-	if output, ok := resp["output"].(map[string]any); ok {
+	if output, ok := data["output"].(map[string]any); ok {
 		ordNo := output["ODNO"].(string)
 		ordTimeStr := output["ORD_TMD"].(string)
 		venue := output["KRX_FWDG_ORD_ORGNO"].(string)
@@ -298,9 +270,9 @@ func newOrderResult(resp map[string]any) (*OrderResult, error) {
 			OrderedAt: ordTime,
 			Venue:     venue,
 		}, nil
-	} else {
-		return nil, fmt.Errorf("response output is not a map")
 	}
+
+	return nil, fmt.Errorf("response output is not a map")
 }
 
 type OrderResult struct {
