@@ -42,7 +42,7 @@ func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, op
 		},
 		oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
 			"CANO":         *cano,
-			"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
+			"ACNT_PRDT_CD": fmt.Sprintf("%d", *acntprdtcd),
 			"PDNO":         code,                         // 종목코드
 			"ORD_DVSN":     opt.getDVSN(),                // 주문구분
 			"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량
@@ -88,7 +88,7 @@ func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt
 		},
 		oapi.PostUapiDomesticStockV1TradingOrderCashJSONRequestBody{
 			"CANO":         *cano,
-			"ACNT_PRDT_CD": fmt.Sprintf("%02d", *acntprdtcd),
+			"ACNT_PRDT_CD": fmt.Sprintf("%d", *acntprdtcd),
 			"PDNO":         code,                         // 종목코드
 			"ORD_DVSN":     opt.getDVSN(),                // 주문구분
 			"ORD_QTY":      fmt.Sprintf("%d", qty),       // 주문수량

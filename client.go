@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/suapapa/go_kinvest/internal/oapi"
@@ -50,7 +51,8 @@ type Client struct {
 // NewClient creates a new Kinvest client
 // It uses the provided config to set up the client
 // If the config is nil, it will use the environment variables
-// KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT, KINVEST_MAC
+// KINVEST_APPKEY, KINVEST_APPSECRET, KINVEST_ACCOUNT
+// and KINVEST_TOKEN_PATH (optional) to save the access token
 func NewClient(config *ClientConfig) (*Client, error) {
 	ip, mac, err := getLocalIPAndMAC()
 	if err != nil {
@@ -85,15 +87,26 @@ func NewClient(config *ClientConfig) (*Client, error) {
 	}
 
 	fillHeader := func(ctx context.Context, req *http.Request) error {
-		// req.Header.Set("content-type", jsonContentType)
-		req.Header.Set("authorization", c.token.Authorization())
+		if c.token != nil {
+			auth := c.token.Authorization()
+			if auth != "" {
+				req.Header.Set("authorization", c.token.Authorization())
+			}
+		}
 		req.Header.Set("appkey", c.appKey)
 		req.Header.Set("appsecret", c.appSecret)
 
 		return nil
 	}
 	refreshToken := func(ctx context.Context, req *http.Request) error {
-		return c.refreshToken()
+		switch {
+		case strings.Contains(req.URL.Path, "/oauth2/revokeP"):
+			return nil
+		case strings.Contains(req.URL.Path, "/oauth2/tokenP"):
+			return nil
+		}
+
+		return c.refreshToken(ctx)
 	}
 	c.oc, err = oapi.NewClient(
 		prodAddr,
@@ -108,7 +121,7 @@ func NewClient(config *ClientConfig) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) refreshToken() error {
+func (c *Client) refreshToken(ctx context.Context) error {
 	if c.token != nil && !c.token.IsExpired() {
 		return nil
 	}
@@ -121,12 +134,12 @@ func (c *Client) refreshToken() error {
 	var err error
 	if c.token == nil || c.token.IsExpired() {
 		if fileExists(tokenPath) {
-			c.token, err = LoadAccessToken(tokenPath)
+			c.token, err = loadAccessToken(tokenPath)
 			if err == nil {
 				return nil
 			}
 		}
-		c.token, err = c.getToken()
+		c.token, err = c.getToken(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to get token: %w", err)
 		}
@@ -140,25 +153,16 @@ func (c *Client) refreshToken() error {
 	return nil
 }
 
-func (c *Client) getToken() (*accessToken, error) {
-	reqBody := mustCreateJsonReader(map[string]any{
-		"grant_type": "client_credentials",
-		"appkey":     c.appKey,
-		"appsecret":  c.appSecret,
-	})
-	req, err := oapi.NewPostOauth2TokenPRequestWithBody(
-		c.oc.Server,
-		&oapi.PostOauth2TokenPParams{
-			ContentType: &jsonContentType,
+func (c *Client) getToken(ctx context.Context) (*accessToken, error) {
+	resp, err := c.oc.PostOauth2TokenP(
+		ctx,
+		&oapi.PostOauth2TokenPParams{},
+		oapi.PostOauth2TokenPJSONRequestBody{
+			"grant_type": "client_credentials",
+			"appkey":     c.appKey,
+			"appsecret":  c.appSecret,
 		},
-		jsonContentType,
-		reqBody,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	resp, err := c.oc.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}

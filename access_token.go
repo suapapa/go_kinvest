@@ -26,7 +26,7 @@ type accessToken struct {
 	ExpiresIn   time.Time `json:"expires_in" yaml:"expires_in"`
 }
 
-func LoadAccessToken(tokenPath string) (*accessToken, error) {
+func loadAccessToken(tokenPath string) (*accessToken, error) {
 	ret := &accessToken{}
 	f, err := os.Open(tokenPath)
 	if err != nil {
@@ -94,5 +94,9 @@ func (t *accessToken) IsExpired() bool {
 
 func (t *accessToken) Authorization() string {
 	ret := t.TokenType + " " + t.AccessToken
+	if ret == " " {
+		return ""
+	}
+
 	return ret
 }
