@@ -48,6 +48,7 @@ type DomesticAccountBalanceItem struct {
 	WholWeitRt  float64 `yaml:"전체비중율,omitempty"`
 }
 
+// NewDomesticAccountBalanceItem creates a new DomesticAccountBalanceItem from the response data
 func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, error) {
 	if data == nil {
 		return nil, fmt.Errorf("data is nil")
