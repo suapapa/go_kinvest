@@ -16,3 +16,9 @@ func TestParseAccout(t *testing.T) {
 	assert.Equal(t, "12345678", *first, "first part should be 12345678")
 	assert.Equal(t, 12, *second, "second part should be 12")
 }
+
+func TestGetExt(t *testing.T) {
+	filename := "test.txt"
+	ext := getExt(filename)
+	assert.Equal(t, "txt", ext, "extension should be txt")
+}

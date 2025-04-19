@@ -7,9 +7,12 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/goccy/go-yaml"
 )
 
 func mustCreateJsonReader(data any) io.ReadCloser {
@@ -31,6 +34,13 @@ func mustUnmarshalJsonBody(body io.Reader) map[string]any {
 func unmarshalJsonBody(body io.Reader, data any) error {
 	if err := json.NewDecoder(body).Decode(data); err != nil {
 		return fmt.Errorf("failed to unmarshal json body: %w", err)
+	}
+	return nil
+}
+
+func unmarshalYamlBody(body io.Reader, data any) error {
+	if err := yaml.NewDecoder(body).Decode(data); err != nil {
+		return fmt.Errorf("failed to unmarshal yaml body: %w", err)
 	}
 	return nil
 }
@@ -170,6 +180,14 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return true
+}
+
+func getExt(filename string) string {
+	ext := filepath.Ext(filename)
+	if ext == "" {
+		return ""
+	}
+	return ext[1:]
 }
 
 func ptr[T any](v T) *T {

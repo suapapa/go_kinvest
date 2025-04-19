@@ -48,6 +48,7 @@ type DomesticAccountBalanceItem struct {
 	WholWeitRt  float64 `yaml:"전체비중율,omitempty"`
 }
 
+// NewDomesticAccountBalanceItem creates a new DomesticAccountBalanceItem from the response data
 func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, error) {
 	if data == nil {
 		return nil, fmt.Errorf("data is nil")
@@ -65,8 +66,8 @@ func NewDomesticAccountBalanceItem(data *output1) (*DomesticAccountBalanceItem, 
 	return item, nil
 }
 
-// Empty checks if the item is empty
-func (i *DomesticAccountBalanceItem) Empty() bool {
+// empty checks if the item is empty
+func (i *DomesticAccountBalanceItem) empty() bool {
 	return i == nil || (i.PchsAmt == 0 && i.EvluAmt == 0 && i.EvluPflsAmt == 0 && i.CrdtLndAmt == 0 && i.RealNassAmt == 0)
 }
 
@@ -113,7 +114,7 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
 			}
-			if !item.Empty() {
+			if !item.empty() {
 				bItems[key] = item
 			}
 		}
@@ -123,7 +124,7 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
 			}
-			if !item.Empty() {
+			if !item.empty() {
 				bItems[key] = item
 			}
 		}
@@ -240,7 +241,7 @@ type output2 struct {
 	FrcrEvluTota           string `json:"frcr_evlu_tota"`              // 외화평가총액
 	TotDnclAmt             string `json:"tot_dncl_amt"`                // 총예수금액
 	CmaEvluAmt             string `json:"cma_evlu_amt"`                // CMA평가금액
-	DnclAmt                string `json:"dncl_amt"`                    // 예수금예
+	DnclAmt                string `json:"dncl_amt"`                    // 예수금액
 	TotSbstAmt             string `json:"tot_sbst_amt"`                // 총대용금액
 	ThdtRcvbAmt            string `json:"thdt_rcvb_amt"`               // 당일미수금액
 	OvrsStckEvluAmt1       string `json:"ovrs_stck_evlu_amt1"`         // 해외주식평가금액1

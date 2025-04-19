@@ -44,7 +44,7 @@ type Client struct {
 
 	appKey    string
 	appSecret string
-	token     *AccessToken
+	token     *accessToken
 }
 
 // NewClient creates a new Kinvest client
@@ -92,21 +92,17 @@ func NewClient(config *ClientConfig) (*Client, error) {
 
 		return nil
 	}
-	// c.reqEditors = []oapi.RequestEditorFn{
-	// 	fixCodeLen, // fix bugs in the OpenApi doc, kinvest_prod.yaml
-	// 	fillHeader, // fill authorization header
-	// }
+	refreshToken := func(ctx context.Context, req *http.Request) error {
+		return c.refreshToken()
+	}
 	c.oc, err = oapi.NewClient(
 		prodAddr,
+		oapi.WithRequestEditorFn(refreshToken),
 		oapi.WithRequestEditorFn(fixCodeLen),
 		oapi.WithRequestEditorFn(fillHeader),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oapi client: %w", err)
-	}
-
-	if err := c.refreshToken(); err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
 	return c, nil
@@ -144,7 +140,7 @@ func (c *Client) refreshToken() error {
 	return nil
 }
 
-func (c *Client) getToken() (*AccessToken, error) {
+func (c *Client) getToken() (*accessToken, error) {
 	reqBody := mustCreateJsonReader(map[string]any{
 		"grant_type": "client_credentials",
 		"appkey":     c.appKey,
@@ -173,7 +169,7 @@ func (c *Client) getToken() (*AccessToken, error) {
 	}
 	data := mustUnmarshalJsonBody(resp.Body)
 
-	return &AccessToken{
+	return &accessToken{
 		TokenType:   data["token_type"].(string),
 		AccessToken: data["access_token"].(string),
 		ExpiresIn:   time.Now().Add(time.Duration((data["expires_in"].(float64))) * time.Second),
