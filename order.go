@@ -24,7 +24,7 @@ func (c *Client) SellDomesticStock(ctx context.Context, code string, qty int, op
 
 	if opt == nil {
 		var err error
-		opt, err = NewOrderDomesticStockOptions("시장가", 0)
+		opt, err = NewSellOrderDomesticStockOptions("시장가", "일반매도", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
@@ -70,7 +70,7 @@ func (c *Client) BuyDomesticStock(ctx context.Context, code string, qty int, opt
 
 	if opt == nil {
 		var err error
-		opt, err = NewOrderDomesticStockOptions("시장가", 0)
+		opt, err = NewBuyOrderDomesticStockOptions("시장가", 0)
 		if err != nil {
 			return nil, fmt.Errorf("create buy option failed: %w", err)
 		}
@@ -110,16 +110,7 @@ type OrderDomesticStockOptions struct {
 	SellType string // 매도구분 : 일반매도, 임의매도, 대차매도
 }
 
-// NewOrderDemesticStockOption creates a new BuytDomesticStockOption.
-// if orderPrice is 0, orderType is somthing like the "시장가".
-// orderType should be one of the following:
-//
-//	지정가, 시장가, 조건부지정가, 최유리지정가, 최우선지정가, 장전 시간외, 장후 시간외, 시간외 단일가,
-//	경매매, 자기주식, 자기주식S-Option, 자기주식금전신탁, IOC지정가, IOC시장가, FOK시장가, IOC최유리,
-//	FOK최유리, 장중대량, 장중바스켓, 장개시전 시간외대량, 장개시전 시간외바스켓, 장개시전 금전신탁자사주,
-//	장개시전 자기주식, 시간외대량, 시간외자사주신탁, 시간외대량자기주식, 바스켓, 중간가, 스톱지정가,
-//	중간가IOC, 중간가FOK
-func NewOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomesticStockOptions, error) {
+func newOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomesticStockOptions, error) {
 	if _, ok := dvsnCodes[orderType]; !ok {
 		var orderTypes []string
 		for k := range dvsnCodes {
@@ -134,14 +125,40 @@ func NewOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomes
 	}, nil
 }
 
-// SetSellType sets the sell type for the order.
-func (o *OrderDomesticStockOptions) SetSellType(sellType string) {
-	switch sellType {
-	case "일반매도", "임의매도", "대차매도":
-		o.SellType = sellType
-	default:
-		o.SellType = "일반매도"
+// NewBuyOrderDomesticStockOptions creates a new BuyDomesticStock.
+func NewBuyOrderDomesticStockOptions(orderType string, orderPrice int) (*OrderDomesticStockOptions, error) {
+	opt, err := newOrderDomesticStockOptions(orderType, orderPrice)
+	if err != nil {
+		return nil, fmt.Errorf("create buy option failed: %w", err)
 	}
+	return opt, nil
+}
+
+// NewSellOrderDomesticStockOptions creates a new SellDomesticStock.
+func NewSellOrderDomesticStockOptions(orderType, sellType string, orderPrice int) (*OrderDomesticStockOptions, error) {
+	opt, err := newOrderDomesticStockOptions(orderType, orderPrice)
+	if err != nil {
+		return nil, fmt.Errorf("create sell option failed: %w", err)
+	}
+	if err := opt.SetSellType(sellType); err != nil {
+		return nil, fmt.Errorf("set sell type failed: %w", err)
+	}
+	return opt, nil
+}
+
+// SetSellType sets the sell type for the order.
+func (o *OrderDomesticStockOptions) SetSellType(sellType string) error {
+	if _, ok := sellTypeCode[sellType]; ok {
+		o.SellType = sellType
+	} else {
+		var sellTypeCodes []string
+		for k := range sellTypeCode {
+			sellTypeCodes = append(sellTypeCodes, k)
+		}
+		return fmt.Errorf("invalid sell type: %s, set one of the following: %s", sellType, strings.Join(sellTypeCodes, ", "))
+	}
+
+	return nil
 }
 
 func (o *OrderDomesticStockOptions) getDVSN() string {
@@ -187,15 +204,16 @@ var dvsnCodes = orderType{
 }
 
 func (o *OrderDomesticStockOptions) getSellTypeCode() string {
-	sellTypeCode := map[string]string{
-		"일반매도": "01",
-		"임의매도": "02",
-		"대차매도": "05",
-	}
 	if code, ok := sellTypeCode[o.SellType]; ok {
 		return code
 	}
 	return sellTypeCode["일반매도"]
+}
+
+var sellTypeCode = map[string]string{
+	"일반매도": "01",
+	"임의매도": "02",
+	"대차매도": "05",
 }
 
 type orderType map[string]string
