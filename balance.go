@@ -20,11 +20,7 @@ func (c *Client) GetDomesticAccountBalance() (*DomesticAccountBalance, error) {
 			ACNTPRDTCD:     acntprdtcd,
 			INQRDVSN1:      ptr(""),
 			BSPRBFDTAPLYYN: ptr(""),
-			// ContentType:    &jsonContentType,
-			// Authorization:  c.token.Authorization(),
-			// Appkey:         &c.appKey,
-			// Appsecret:      &c.appSecret,
-			TrId: ptr("CTRP6548R"),
+			TrId:           ptr("CTRP6548R"),
 		},
 	)
 	if err != nil {

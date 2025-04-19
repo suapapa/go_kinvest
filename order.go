@@ -44,10 +44,6 @@ func (c *Client) SellDomesticStock(itemNo string, qty int, opt *OrderDomesticSto
 	req, err := oapi.NewPostUapiDomesticStockV1TradingOrderCashRequestWithBody(
 		c.oc.Server,
 		&oapi.PostUapiDomesticStockV1TradingOrderCashParams{
-			// ContentType: &jsonContentType,
-			// Authorization: c.token.Authorization(),
-			// Appkey:        &c.appKey,
-			// Appsecret:     &c.appSecret,
 			TrId: ptr("TTTC0801U"),
 		},
 		jsonContentType,

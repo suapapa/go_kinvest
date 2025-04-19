@@ -42,6 +42,8 @@ type Client struct {
 	appKey    string
 	appSecret string
 	token     *AccessToken
+
+	reqEditors []oapi.RequestEditorFn
 }
 
 // NewClient creates a new Kinvest client
@@ -106,10 +108,12 @@ func NewClient(config *ClientConfig) (*Client, error) {
 
 		return nil
 	}
+	c.reqEditors = []oapi.RequestEditorFn{
+		fixCodeLen, // fix bugs in the OpenApi doc, kinvest_prod.yaml
+		fillHeader, // fill authorization header
+	}
 	c.oc, err = oapi.NewClient(
 		prodAddr,
-		oapi.WithRequestEditorFn(fixCodeLen),
-		oapi.WithRequestEditorFn(fillHeader),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oapi client: %w", err)
@@ -191,6 +195,12 @@ func (c *Client) getToken() (*AccessToken, error) {
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	for _, editor := range c.reqEditors {
+		if err := editor(context.Background(), req); err != nil {
+			return nil, fmt.Errorf("failed to edit request: %w", err)
+		}
+	}
+
 	err := c.refreshToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to refresh token: %w", err)
