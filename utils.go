@@ -175,6 +175,21 @@ func toTime[T any](v T) time.Time {
 	}
 }
 
+func hhmmssToTime(hms string) (time.Time, error) {
+	now := time.Now()
+
+	t, err := time.Parse("150405", hms)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	return time.Date(
+		now.Year(), now.Month(), now.Day(),
+		t.Hour(), t.Minute(), t.Second(), 0,
+		time.Local,
+	), nil
+}
+
 func fileExists(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false

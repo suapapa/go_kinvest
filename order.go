@@ -3,7 +3,6 @@ package kinvest
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -252,11 +251,10 @@ func newOrderResult(data map[string]any) (*OrderResult, error) {
 			return nil, fmt.Errorf("response output is nil")
 		}
 
-		ordTimeUnix, err := strconv.ParseInt(ordTimeStr, 10, 64)
+		ordTime, err := hhmmssToTime(ordTimeStr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid order time: %s", ordTimeStr)
+			return nil, fmt.Errorf("convert order time failed: %w", err)
 		}
-		ordTime := time.Unix(ordTimeUnix, 0)
 
 		return &OrderResult{
 			OrderNo:   ordNo,
