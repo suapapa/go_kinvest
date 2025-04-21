@@ -228,11 +228,22 @@ func (r *GetDomesticHoldingsResult) GetNext(ctx context.Context) (*GetDomesticHo
 	if r.ctxAreaFK == "" || r.ctxAreaNK == "" {
 		return nil, fmt.Errorf("no next page")
 	}
-	opt := *r.opt
-	opt.CtxAreaFK = r.ctxAreaFK
-	opt.CtxAreaNK = r.ctxAreaNK
+	oldCtxAreaFK := r.ctxAreaFK
+	oldCtxAreaNK := r.ctxAreaNK
 
-	return r.c.GetDomesticHoldings(ctx, &opt)
+	opt := *r.opt
+	opt.CtxAreaFK = oldCtxAreaFK
+	opt.CtxAreaNK = oldCtxAreaNK
+
+	ret, err := r.c.GetDomesticHoldings(ctx, &opt)
+	if err != nil {
+		return nil, fmt.Errorf("get next page failed: %w", err)
+	}
+	if ret.ctxAreaFK == oldCtxAreaFK && ret.ctxAreaNK == oldCtxAreaNK {
+		return nil, fmt.Errorf("same as previous page")
+	}
+
+	return ret, nil
 }
 
 // Stock represents a stock holding.
