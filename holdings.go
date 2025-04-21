@@ -134,64 +134,78 @@ func newGetDomesticHoldingsResult(c *Client, opt *GetDomesticHoldingsOptions, da
 		ctxAreaFK: data["ctx_area_fk100"].(string),
 		ctxAreaNK: data["ctx_area_nk100"].(string),
 	}
-	if output, ok := data["output1"].(map[string]any); ok {
-		s := &Stock{
-			Code:              output["pdno"].(string),
-			Name:              output["prdt_name"].(string),
-			OrderType:         output["trad_dvsn_name"].(string), // 매수매도구분
-			PrevBuyQty:        toInt(output["bfdy_buy_qty"]),
-			PrevSellQty:       toInt(output["bfdy_sll_qty"]),
-			TodayBuyQty:       toInt(output["thdt_buyqty"]),
-			TodaySellQty:      toInt(output["thdt_sll_qty"]),
-			HoldingQty:        toInt(output["hldg_qty"]),
-			OrdPossibleQty:    toInt(output["ord_psbl_qty"]),
-			PurchaseAvgPrice:  toFloat(output["pchs_avg_pric"]),
-			PurchaseAmount:    toInt(output["pchs_amt"]),
-			CurrPrice:         toInt(output["prpr"]),
-			EvalAmount:        toInt(output["evlu_amt"]),
-			EvalProfitAmount:  toInt(output["evlu_pfls_amt"]),
-			EvalProfitRate:    toFloat(output["evlu_pfls_rt"]),
-			LoanDate:          toTime(output["loan_dt"]),
-			LoanAmount:        toInt(output["loan_amt"]),
-			ShortSellAmount:   toInt(output["stln_slng_chgs"]),
-			ExpiredDate:       toTime(output["expd_dt"]),
-			ChangeRate:        toFloat(output["fltt_rt"]),
-			PriceDiffFromPrev: toInt(output["bfdy_cprs_icdc"]),
-			MarginRate:        output["item_mgna_rt_name"].(string),
-			GuaranteeRate:     output["grta_rt_name"].(string),
-			SubstitutePrice:   toInt(output["sbst_pric"]),
-			LoanPrice:         toFloat(output["stck_loan_unpr"]),
+	if outputs, ok := data["output1"].([]any); ok {
+		for _, output := range outputs {
+			if output == nil {
+				continue
+			}
+			if outputMap, ok := output.(map[string]any); ok {
+				s := &Stock{
+					Code:              outputMap["pdno"].(string),
+					Name:              outputMap["prdt_name"].(string),
+					OrderType:         outputMap["trad_dvsn_name"].(string), // 매수매도구분
+					PrevBuyQty:        toInt(outputMap["bfdy_buy_qty"]),
+					PrevSellQty:       toInt(outputMap["bfdy_sll_qty"]),
+					TodayBuyQty:       toInt(outputMap["thdt_buyqty"]),
+					TodaySellQty:      toInt(outputMap["thdt_sll_qty"]),
+					HoldingQty:        toInt(outputMap["hldg_qty"]),
+					OrdPossibleQty:    toInt(outputMap["ord_psbl_qty"]),
+					PurchaseAvgPrice:  toFloat(outputMap["pchs_avg_pric"]),
+					PurchaseAmount:    toInt(outputMap["pchs_amt"]),
+					CurrPrice:         toInt(outputMap["prpr"]),
+					EvalAmount:        toInt(outputMap["evlu_amt"]),
+					EvalProfitAmount:  toInt(outputMap["evlu_pfls_amt"]),
+					EvalProfitRate:    toFloat(outputMap["evlu_pfls_rt"]),
+					LoanDate:          toTime(outputMap["loan_dt"]),
+					LoanAmount:        toInt(outputMap["loan_amt"]),
+					ShortSellAmount:   toInt(outputMap["stln_slng_chgs"]),
+					ExpiredDate:       toTime(outputMap["expd_dt"]),
+					ChangeRate:        toFloat(outputMap["fltt_rt"]),
+					PriceDiffFromPrev: toInt(outputMap["bfdy_cprs_icdc"]),
+					MarginRate:        outputMap["item_mgna_rt_name"].(string),
+					GuaranteeRate:     outputMap["grta_rt_name"].(string),
+					SubstitutePrice:   toInt(outputMap["sbst_pric"]),
+					LoanPrice:         toFloat(outputMap["stck_loan_unpr"]),
+				}
+				ret.Holdings = append(ret.Holdings, s)
+			}
 		}
-		ret.Holdings = append(ret.Holdings, s)
 	}
-	if output, ok := data["output2"].(map[string]any); ok {
-		b := &Balance{
-			TotalDeposit:                  toInt(output["dnca_tot_amt"]),
-			NextSettlementAmount:          toInt(output["nxdy_excc_amt"]),
-			TempSettlementAmount:          toInt(output["prvs_rcdl_excc_amt"]),
-			CMAValuationAmount:            toInt(output["cma_evlu_amt"]),
-			PrevBuyAmount:                 toInt(output["bfdy_buy_amt"]),
-			TodayBuyAmount:                toInt(output["thdt_buy_amt"]),
-			NextAutoRepaymentAmount:       toInt(output["nxdy_auto_rdpt_amt"]),
-			PrevSellAmount:                toInt(output["bfdy_sll_amt"]),
-			TodaySellAmount:               toInt(output["thdt_sll_amt"]),
-			D2AutoRepaymentAmount:         toInt(output["d2_auto_rdpt_amt"]),
-			PrevFeeAmount:                 toInt(output["bfdy_tlex_amt"]),
-			TodayFeeAmount:                toInt(output["thdt_tlex_amt"]),
-			TotalLoanAmount:               toInt(output["tot_loan_amt"]),
-			SecuritiesValuationAmount:     toInt(output["scts_evlu_amt"]),
-			TotalValuationAmount:          toInt(output["tot_evlu_amt"]),
-			NetAssetAmount:                toInt(output["nass_amt"]),
-			IsAutoRepaymentForLoan:        output["fncg_gld_auto_rdpt_yn"].(string) == "Y",
-			TotalPurchaseAmount:           toInt(output["pchs_amt_smtl_amt"]),
-			TotalValuationSum:             toInt(output["evlu_amt_smtl_amt"]),
-			TotalUnrealizedPnL:            toInt(output["evlu_pfls_smtl_amt"]),
-			TotalShortSellProceeds:        toInt(output["tot_stln_slng_chgs"]),
-			PrevTotalAssetValuationAmount: toInt(output["bfdy_tot_asst_evlu_amt"]),
-			AssetChangeAmount:             toInt(output["asst_icdc_amt"]),
-			AssetChangeReturnRate:         toFloat(output["asst_icdc_erng_rt"]),
+	if outputs, ok := data["output2"].([]any); ok {
+		for _, output := range outputs {
+			if output == nil {
+				continue
+			}
+			if outputMap, ok := output.(map[string]any); ok {
+				b := &Balance{
+					TotalDeposit:                  toInt(outputMap["dnca_tot_amt"]),
+					NextSettlementAmount:          toInt(outputMap["nxdy_excc_amt"]),
+					TempSettlementAmount:          toInt(outputMap["prvs_rcdl_excc_amt"]),
+					CMAValuationAmount:            toInt(outputMap["cma_evlu_amt"]),
+					PrevBuyAmount:                 toInt(outputMap["bfdy_buy_amt"]),
+					TodayBuyAmount:                toInt(outputMap["thdt_buy_amt"]),
+					NextAutoRepaymentAmount:       toInt(outputMap["nxdy_auto_rdpt_amt"]),
+					PrevSellAmount:                toInt(outputMap["bfdy_sll_amt"]),
+					TodaySellAmount:               toInt(outputMap["thdt_sll_amt"]),
+					D2AutoRepaymentAmount:         toInt(outputMap["d2_auto_rdpt_amt"]),
+					PrevFeeAmount:                 toInt(outputMap["bfdy_tlex_amt"]),
+					TodayFeeAmount:                toInt(outputMap["thdt_tlex_amt"]),
+					TotalLoanAmount:               toInt(outputMap["tot_loan_amt"]),
+					SecuritiesValuationAmount:     toInt(outputMap["scts_evlu_amt"]),
+					TotalValuationAmount:          toInt(outputMap["tot_evlu_amt"]),
+					NetAssetAmount:                toInt(outputMap["nass_amt"]),
+					IsAutoRepaymentForLoan:        outputMap["fncg_gld_auto_rdpt_yn"].(string) == "Y",
+					TotalPurchaseAmount:           toInt(outputMap["pchs_amt_smtl_amt"]),
+					TotalValuationSum:             toInt(outputMap["evlu_amt_smtl_amt"]),
+					TotalUnrealizedPnL:            toInt(outputMap["evlu_pfls_smtl_amt"]),
+					TotalShortSellProceeds:        toInt(outputMap["tot_stln_slng_chgs"]),
+					PrevTotalAssetValuationAmount: toInt(outputMap["bfdy_tot_asst_evlu_amt"]),
+					AssetChangeAmount:             toInt(outputMap["asst_icdc_amt"]),
+					AssetChangeReturnRate:         toFloat(outputMap["asst_icdc_erng_rt"]),
+				}
+				ret.Balances = append(ret.Balances, b)
+			}
 		}
-		ret.Balances = append(ret.Balances, b)
 	}
 
 	if len(ret.Holdings) == 0 && len(ret.Balances) == 0 {
