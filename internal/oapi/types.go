@@ -2535,7 +2535,7 @@ type GetUapiDomesticStockV1QuotationsInquireCcnlParams struct {
 
 	// FidInputIscd 종목코드 (6자리)
 	// ETN의 경우, Q로 시작 (EX. Q500001)
-	FidInputIscd *int `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
+	FidInputIscd *string `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
 
 	// ContentType application/json; charset=utf-8
 	ContentType *string `json:"content-type,omitempty"`
@@ -3117,7 +3117,7 @@ type GetUapiDomesticStockV1QuotationsInquirePrice2Params struct {
 
 	// FidInputIscd 종목코드 (6자리)
 	// ETN의 경우, Q로 시작 (EX. Q500001)
-	FidInputIscd *int `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
+	FidInputIscd *string `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
 
 	// ContentType application/json; charset=utf-8
 	ContentType *string `json:"content-type,omitempty"`
