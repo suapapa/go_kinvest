@@ -43,13 +43,13 @@ type uapiDomesticStockV1QuotationsInquireCcnlResponse struct {
 }
 
 type DomesticInquireCcnl struct {
-	StckCntgHour string `json:"stck_cntg_hour" yaml:"주식체결시간"` // 주식 체결 시간
-	StckPrpr     string `json:"stck_prpr" yaml:"주식현재가"`       // 주식 현재가
-	PrdyVrss     string `json:"prdy_vrss" yaml:"전일대비"`        // 전일 대비
-	PrdyVrssSign string `json:"prdy_vrss_sign" yaml:"전일대비부호"` // 전일 대비 부호
-	CntgVol      string `json:"cntg_vol" yaml:"체결거래량"`        // 체결 거래량
-	TdayRltv     string `json:"tday_rltv" yaml:"당일체결강도"`      // 당일 체결강도
-	PrdyCtrt     string `json:"prdy_ctrt" yaml:"전일대비율"`       // 전일 대비율
+	StckCntgHour string `json:"stck_cntg_hour,omitempty" yaml:"주식체결시간,omitempty"` // 주식 체결 시간
+	StckPrpr     string `json:"stck_prpr,omitempty" yaml:"주식현재가,omitempty"`       // 주식 현재가
+	PrdyVrss     string `json:"prdy_vrss,omitempty" yaml:"전일대비,omitempty"`        // 전일 대비
+	PrdyVrssSign string `json:"prdy_vrss_sign,omitempty" yaml:"전일대비부호,omitempty"` // 전일 대비 부호
+	CntgVol      string `json:"cntg_vol,omitempty" yaml:"체결거래량,omitempty"`        // 체결 거래량
+	TdayRltv     string `json:"tday_rltv,omitempty" yaml:"당일체결강도,omitempty"`      // 당일 체결강도
+	PrdyCtrt     string `json:"prdy_ctrt,omitempty" yaml:"전일대비율,omitempty"`       // 전일 대비율
 }
 
 func validateDomesticInquireCcnlResp(resp *uapiDomesticStockV1QuotationsInquireCcnlResponse) ([]*DomesticInquireCcnl, error) {
