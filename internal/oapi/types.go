@@ -3878,7 +3878,7 @@ type GetUapiDomesticStockV1QuotationsSearchInfoParams struct {
 	// 주식(하이닉스) : 000660 (코드 : 300)
 	// 선물(101S12) : KR4101SC0009 (코드 : 301)
 	// 미국(AAPL) : AAPL (코드 : 512)
-	PDNO *int `form:"PDNO,omitempty" json:"PDNO,omitempty"`
+	PDNO *string `form:"PDNO,omitempty" json:"PDNO,omitempty"`
 
 	// PRDTTYPECD 상품유형코드
 	// 300 주식
@@ -3889,7 +3889,7 @@ type GetUapiDomesticStockV1QuotationsSearchInfoParams struct {
 	// 501 홍콩 / 543 홍콩CNY / 558 홍콩USD
 	// 507 베트남 하노이 / 508 베트남 호치민
 	// 551 중국 상해A / 552 중국 심천A
-	PRDTTYPECD *int `form:"PRDT_TYPE_CD,omitempty" json:"PRDT_TYPE_CD,omitempty"`
+	PRDTTYPECD *string `form:"PRDT_TYPE_CD,omitempty" json:"PRDT_TYPE_CD,omitempty"`
 
 	// ContentType application/json; charset=utf-8
 	ContentType *string `json:"content-type,omitempty"`

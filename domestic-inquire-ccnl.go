@@ -19,6 +19,7 @@ func (c *Client) GetDomesticInquireCcnl(ctx context.Context, code string) (*Dome
 		&oapi.GetUapiDomesticStockV1QuotationsInquireCcnlParams{
 			FidCondMrktDivCode: ptr("J"), // 시장 구분 코드 (J: 주식)
 			FidInputIscd:       ptr(code),
+			TrId:               ptr("FHKST01010300"),
 		},
 	)
 	if err != nil {
@@ -31,7 +32,7 @@ func (c *Client) GetDomesticInquireCcnl(ctx context.Context, code string) (*Dome
 		return nil, fmt.Errorf("unmarshal response failed: %w", err)
 	}
 
-	return ValidateDomesticInquireCcnl(respData)
+	return validateDomesticInquireCcnl(respData)
 }
 
 type uapiDomesticStockV1QuotationsInquireCcnlResponse struct {
@@ -51,7 +52,7 @@ type DomesticInquireCcnl struct {
 	PrdyCtrt     string `json:"prdy_ctrt" yaml:"전일대비율"`       // 전일 대비율
 }
 
-func ValidateDomesticInquireCcnl(resp *uapiDomesticStockV1QuotationsInquireCcnlResponse) (*DomesticInquireCcnl, error) {
+func validateDomesticInquireCcnl(resp *uapiDomesticStockV1QuotationsInquireCcnlResponse) (*DomesticInquireCcnl, error) {
 	if resp.RtCd != "0" {
 		return nil, fmt.Errorf("error response: rt_cd=%s, msg_cd=%s, msg1=%s", resp.RtCd, resp.MsgCd, resp.Msg1)
 	}

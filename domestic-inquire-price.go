@@ -19,6 +19,7 @@ func (c *Client) GetDomesticInquirePrice(ctx context.Context, code string) (*Dom
 		&oapi.GetUapiDomesticStockV1QuotationsInquirePrice2Params{
 			FidCondMrktDivCode: ptr("J"), // 시장 구분 코드 (J: 주식)
 			FidInputIscd:       ptr(code),
+			TrId:               ptr("FHPST01010000"),
 		},
 	)
 	if err != nil {
@@ -31,7 +32,7 @@ func (c *Client) GetDomesticInquirePrice(ctx context.Context, code string) (*Dom
 		return nil, fmt.Errorf("unmarshal response failed: %w", err)
 	}
 
-	return ValidateDomesticInquirePrice(respData)
+	return validateDomesticInquirePrice(respData)
 }
 
 type uapiDomesticStoecV1QuotationsInquirePrice2Response struct {
@@ -98,7 +99,7 @@ type DomesticInquirePrice struct {
 	PrdyVol              string `json:"prdy_vol" yaml:"전일거래량"`                       // 전일 거래량
 }
 
-func ValidateDomesticInquirePrice(data *uapiDomesticStoecV1QuotationsInquirePrice2Response) (*DomesticInquirePrice, error) {
+func validateDomesticInquirePrice(data *uapiDomesticStoecV1QuotationsInquirePrice2Response) (*DomesticInquirePrice, error) {
 	if data == nil {
 		return nil, fmt.Errorf("response data is nil")
 	}
