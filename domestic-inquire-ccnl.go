@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticInquireCcnl(ctx context.Context, code string) (*DomesticInquireCcnl, error) {
+func (c *Client) GetDomesticInquireCcnl(ctx context.Context, code string) ([]*DomesticInquireCcnl, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -32,14 +32,14 @@ func (c *Client) GetDomesticInquireCcnl(ctx context.Context, code string) (*Dome
 		return nil, fmt.Errorf("unmarshal response failed: %w", err)
 	}
 
-	return validateDomesticInquireCcnl(respData)
+	return validateDomesticInquireCcnlResp(respData)
 }
 
 type uapiDomesticStockV1QuotationsInquireCcnlResponse struct {
-	Output *DomesticInquireCcnl `json:"output"`
-	RtCd   string               `json:"rt_cd"`
-	MsgCd  string               `json:"msg_cd"`
-	Msg1   string               `json:"msg1"`
+	Output []*DomesticInquireCcnl `json:"output"`
+	RtCd   string                 `json:"rt_cd"`
+	MsgCd  string                 `json:"msg_cd"`
+	Msg1   string                 `json:"msg1"`
 }
 
 type DomesticInquireCcnl struct {
@@ -52,7 +52,7 @@ type DomesticInquireCcnl struct {
 	PrdyCtrt     string `json:"prdy_ctrt" yaml:"전일대비율"`       // 전일 대비율
 }
 
-func validateDomesticInquireCcnl(resp *uapiDomesticStockV1QuotationsInquireCcnlResponse) (*DomesticInquireCcnl, error) {
+func validateDomesticInquireCcnlResp(resp *uapiDomesticStockV1QuotationsInquireCcnlResponse) ([]*DomesticInquireCcnl, error) {
 	if resp.RtCd != "0" {
 		return nil, fmt.Errorf("error response: rt_cd=%s, msg_cd=%s, msg1=%s", resp.RtCd, resp.MsgCd, resp.Msg1)
 	}
