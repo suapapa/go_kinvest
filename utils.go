@@ -15,6 +15,10 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
+var (
+	loc = time.FixedZone("KST", 9*60*60)
+)
+
 func mustCreateJsonReader(data any) io.ReadCloser {
 	buff := bytes.NewBuffer(nil)
 	if err := json.NewEncoder(buff).Encode(data); err != nil {
@@ -176,7 +180,7 @@ func toTime[T any](v T) time.Time {
 }
 
 func hhmmssToTime(hms string) (time.Time, error) {
-	now := time.Now()
+	now := time.Now().In(loc)
 
 	t, err := time.Parse("150405", hms)
 	if err != nil {
@@ -186,7 +190,7 @@ func hhmmssToTime(hms string) (time.Time, error) {
 	return time.Date(
 		now.Year(), now.Month(), now.Day(),
 		t.Hour(), t.Minute(), t.Second(), 0,
-		time.Local,
+		loc,
 	), nil
 }
 
