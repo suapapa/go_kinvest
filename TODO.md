@@ -76,8 +76,8 @@
 - [x] /uapi/domestic-stock/v1/finance/financial-ratio (get) : 국내주식 재무비율
 - [x] /uapi/domestic-stock/v1/finance/profit-ratio (get) : 국내주식 수익성비율
 - [ ] /uapi/domestic-stock/v1/finance/other-major-ratios (get) : 국내주식 기타주요비율
-- [ ] /uapi/domestic-stock/v1/finance/stability-ratio (get) : 국내주식 안정성비율
-- [ ] /uapi/domestic-stock/v1/finance/growth-ratio (get) : 국내주식 성장성비율
+- [x] /uapi/domestic-stock/v1/finance/stability-ratio (get) : 국내주식 안정성비율
+- [x] /uapi/domestic-stock/v1/finance/growth-ratio (get) : 국내주식 성장성비율
 - [ ] /uapi/domestic-stock/v1/quotations/credit-by-company (get) : 국내주식 당사 신용가능종목
 - [ ] /uapi/domestic-stock/v1/ksdinfo/dividend (get) : 예탁원정보(배당일정)
 - [ ] /uapi/domestic-stock/v1/ksdinfo/purreq (get) : 예탁원정보(주식매수청구일정)

@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticProfitRatio(ctx context.Context, code string, anualFiscal bool) ([]*DomesticFinanceProfitRatio, error) {
+func (c *Client) GetDomesticFinanceProfitRatio(ctx context.Context, code string, anualFiscal bool) ([]*DomesticFinanceProfitRatio, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
