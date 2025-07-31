@@ -19,6 +19,7 @@ func (c *Client) GetDomesticFinanceIncomeStatement(ctx context.Context, code str
 		&oapi.GetUapiDomesticStockV1FinanceIncomeStatementParams{
 			FidCondMrktDivCode: ptr("J"), // 시장 구분 코드 (J: 주식)
 			FidInputIscd:       ptr(code),
+			FidDivClsCode:      ptr("1"), // 분기 결산 여부 (0: 연말, 1: 분기)
 			TrId:               ptr("FHKST66430200"),
 		},
 	)
