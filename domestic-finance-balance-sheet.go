@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticFinanceBalanceSheet(ctx context.Context, code string) ([]*DomesticFinanceBalanceSheet, error) {
+func (c *Client) GetDomesticFinanceBalanceSheet(ctx context.Context, code string, anualFiscal bool) ([]*DomesticFinanceBalanceSheet, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -19,7 +19,7 @@ func (c *Client) GetDomesticFinanceBalanceSheet(ctx context.Context, code string
 		&oapi.GetUapiDomesticStockV1FinanceBalanceSheetParams{
 			FidCondMrktDivCode: ptr("J"), // 시장 구분 코드 (J: 주식)
 			FidInputIscd:       ptr(code),
-			FidDivClsCode:      ptr("1"), // 분기 결산 여부 (0: 연말, 1: 분기)
+			FidDivClsCode:      getFiscalPeriodCode(anualFiscal),
 			TrId:               ptr("FHKST66430100"),
 		},
 	)

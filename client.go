@@ -239,3 +239,11 @@ func fixCodeLen(ctx context.Context, req *http.Request) error {
 
 	return nil
 }
+
+func getFiscalPeriodCode(isAnnual bool) *string {
+	// 연말 결산 여부 (0: 연말, 1: 분기)
+	if isAnnual {
+		return ptr("0")
+	}
+	return ptr("1")
+}
