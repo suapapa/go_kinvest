@@ -73,8 +73,8 @@
 - [ ] /uapi/domestic-stock/v1/quotations/search-stock-info (get) : 주식기본조회
 - [x] /uapi/domestic-stock/v1/finance/balance-sheet (get) : 국내주식 대차대조표
 - [x] /uapi/domestic-stock/v1/finance/income-statement (get) : 국내주식 손익계산서
-- [ ] /uapi/domestic-stock/v1/finance/financial-ratio (get) : 국내주식 재무비율
-- [ ] /uapi/domestic-stock/v1/finance/profit-ratio (get) : 국내주식 수익성비율
+- [x] /uapi/domestic-stock/v1/finance/financial-ratio (get) : 국내주식 재무비율
+- [x] /uapi/domestic-stock/v1/finance/profit-ratio (get) : 국내주식 수익성비율
 - [ ] /uapi/domestic-stock/v1/finance/other-major-ratios (get) : 국내주식 기타주요비율
 - [ ] /uapi/domestic-stock/v1/finance/stability-ratio (get) : 국내주식 안정성비율
 - [ ] /uapi/domestic-stock/v1/finance/growth-ratio (get) : 국내주식 성장성비율

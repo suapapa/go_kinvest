@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticFinancialRatio(ctx context.Context, code string) ([]*DomesticFinancialRatio, error) {
+func (c *Client) GetDomesticFinanceFinancialRatio(ctx context.Context, code string) ([]*DomesticFinanceFinancialRatio, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -33,17 +33,17 @@ func (c *Client) GetDomesticFinancialRatio(ctx context.Context, code string) ([]
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return validateDomesticFinanceRatio(respData)
+	return validateDomesticFinanceFinancialRatio(respData)
 }
 
 type uapiDomesticStockV1FinanceFinancialRatioResponse struct {
-	Output []*DomesticFinancialRatio `json:"output"`
-	RtCd   string                    `json:"rt_cd"`
-	MsgCd  string                    `json:"msg_cd"`
-	Msg1   string                    `json:"msg1"`
+	Output []*DomesticFinanceFinancialRatio `json:"output"`
+	RtCd   string                           `json:"rt_cd"`
+	MsgCd  string                           `json:"msg_cd"`
+	Msg1   string                           `json:"msg1"`
 }
 
-type DomesticFinancialRatio struct {
+type DomesticFinanceFinancialRatio struct {
 	StacYymm     string `json:"stac_yymm,omitempty" yaml:"결산년월,omitempty"`         // 결산 년월
 	Grs          string `json:"grs,omitempty" yaml:"매출액증가율,omitempty"`             // 매출액 증가율
 	BsopPrfiInrt string `json:"bsop_prfi_inrt,omitempty" yaml:"영업이익증가율,omitempty"` // 영업 이익 증가율
@@ -56,7 +56,7 @@ type DomesticFinancialRatio struct {
 	LbltRate     string `json:"lblt_rate,omitempty" yaml:"부채비율,omitempty"`         // 부채 비율
 }
 
-func validateDomesticFinanceRatio(data *uapiDomesticStockV1FinanceFinancialRatioResponse) ([]*DomesticFinancialRatio, error) {
+func validateDomesticFinanceFinancialRatio(data *uapiDomesticStockV1FinanceFinancialRatioResponse) ([]*DomesticFinanceFinancialRatio, error) {
 	if data == nil {
 		return nil, fmt.Errorf("response data is nil")
 	}
