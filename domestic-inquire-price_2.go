@@ -27,7 +27,7 @@ func (c *Client) GetDomesticInquirePrice2(ctx context.Context, code string) (*Do
 	}
 	defer resp.Body.Close()
 
-	respData := &uapiDomesticStoecV1QuotationsInquirePrice2Response{}
+	respData := &uapiDomesticStockV1QuotationsInquirePrice2Response{}
 	if err := unmarshalJsonBody(resp.Body, respData); err != nil {
 		return nil, fmt.Errorf("unmarshal response failed: %w", err)
 	}
@@ -35,7 +35,7 @@ func (c *Client) GetDomesticInquirePrice2(ctx context.Context, code string) (*Do
 	return validateDomesticInquirePrice2(respData)
 }
 
-type uapiDomesticStoecV1QuotationsInquirePrice2Response struct {
+type uapiDomesticStockV1QuotationsInquirePrice2Response struct {
 	Output *DomesticInquirePrice2 `json:"output"`
 	RtCd   string                 `json:"rt_cd"`
 	MsgCd  string                 `json:"msg_cd"`
@@ -99,7 +99,7 @@ type DomesticInquirePrice2 struct {
 	PrdyVol              string `json:"prdy_vol,omitempty" yaml:"전일거래량,omitempty"`                       // 전일 거래량
 }
 
-func validateDomesticInquirePrice2(data *uapiDomesticStoecV1QuotationsInquirePrice2Response) (*DomesticInquirePrice2, error) {
+func validateDomesticInquirePrice2(data *uapiDomesticStockV1QuotationsInquirePrice2Response) (*DomesticInquirePrice2, error) {
 	if data == nil {
 		return nil, fmt.Errorf("response data is nil")
 	}

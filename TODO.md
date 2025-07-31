@@ -23,7 +23,7 @@
 - [ ] /uapi/domestic-stock/v1/trading/inquire-period-trade-profit (get) : 기간별매매손익현황조회
 - [ ] /uapi/domestic-stock/v1/trading/inquire-period-profit (get) : 기간별손익일별합산조회
 - [ ] /uapi/domestic-stock/v1/trading/inquire-psbl-sell (get) : 매도가능수량조회
-- [ ] /uapi/domestic-stock/v1/quotations/inquire-price (get) : 주식현재가 시세
+- [x] /uapi/domestic-stock/v1/quotations/inquire-price (get) : 주식현재가 시세
 - [ ] /uapi/domestic-stock/v1/quotations/inquire-ccnl (get) : 주식현재가 체결(최근30건)
 - [ ] /uapi/domestic-stock/v1/quotations/inquire-daily-price (get) : ELW 당일급변종목
 - [ ] /uapi/domestic-stock/v1/quotations/inquire-asking-price-exp-ccn (get) : 주식현재가 호가 예상체결
@@ -71,7 +71,7 @@
 - [ ] /uapi/domestic-stock/v1/quotations/news-title (get) : 종합 시황/공시(제목)
 - [ ] /uapi/domestic-stock/v1/quotations/search-info (get) : 상품기본조회
 - [ ] /uapi/domestic-stock/v1/quotations/search-stock-info (get) : 주식기본조회
-- [ ] /uapi/domestic-stock/v1/finance/balance-sheet (get) : 국내주식 대차대조표
+- [x] /uapi/domestic-stock/v1/finance/balance-sheet (get) : 국내주식 대차대조표
 - [ ] /uapi/domestic-stock/v1/finance/income-statement (get) : 국내주식 손익계산서
 - [ ] /uapi/domestic-stock/v1/finance/financial-ratio (get) : 국내주식 재무비율
 - [ ] /uapi/domestic-stock/v1/finance/profit-ratio (get) : 국내주식 수익성비율

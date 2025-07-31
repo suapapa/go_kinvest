@@ -1411,7 +1411,7 @@ type GetUapiDomesticStockV1FinanceBalanceSheetParams struct {
 	FidCondMrktDivCode *string `form:"fid_cond_mrkt_div_code,omitempty" json:"fid_cond_mrkt_div_code,omitempty"`
 
 	// FidInputIscd 종목코드 (6자리)
-	FidInputIscd *int `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
+	FidInputIscd *string `form:"fid_input_iscd,omitempty" json:"fid_input_iscd,omitempty"`
 
 	// FidDivClsCode 분류 구분 코드 (0:연말, 1:분기)
 	FidDivClsCode *int `form:"fid_div_cls_code,omitempty" json:"fid_div_cls_code,omitempty"`
