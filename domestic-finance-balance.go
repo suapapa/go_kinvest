@@ -9,7 +9,7 @@ import (
 	"github.com/suapapa/go_kinvest/internal/oapi"
 )
 
-func (c *Client) GetDomesticFinanceBalance(ctx context.Context, code string) ([]*DomesticFinanceBalance, error) {
+func (c *Client) GetDomesticFinanceBalanceSheet(ctx context.Context, code string) ([]*DomesticFinanceBalanceSheet, error) {
 	if len(code) != 6 {
 		return nil, fmt.Errorf("invalid item no: %s", code)
 	}
@@ -32,31 +32,31 @@ func (c *Client) GetDomesticFinanceBalance(ctx context.Context, code string) ([]
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return validateDomesticFinanceBalance(respData)
+	return validateDomesticFinanceBalanceSheet(respData)
 }
 
 type uapiDomesticStockV1FinanceBalanceSheetResponse struct {
-	Output []*DomesticFinanceBalance `json:"output"`
-	RtCd   string                    `json:"rt_cd"`
-	MsgCd  string                    `json:"msg_cd"`
-	Msg1   string                    `json:"msg1"`
+	Output []*DomesticFinanceBalanceSheet `json:"output"`
+	RtCd   string                         `json:"rt_cd"`
+	MsgCd  string                         `json:"msg_cd"`
+	Msg1   string                         `json:"msg1"`
 }
 
-type DomesticFinanceBalance struct {
-	StacYymm  string `json:"stac_yymm"`  // 결산 년월
-	Cras      string `json:"cras"`       // 유동자산
-	Fxas      string `json:"fxas"`       // 고정자산
-	TotalAset string `json:"total_aset"` // 자산총계
-	FlowLblt  string `json:"flow_lblt"`  // 유동부채
-	FixLblt   string `json:"fix_lblt"`   // 고정부채
-	TotalLblt string `json:"total_lblt"` // 부채총계
-	Cpfn      string `json:"cpfn"`       // 자본금
-	CfpSurp   string `json:"cfp_surp"`   // 자본 잉여금
-	PrfiSurp  string `json:"prfi_surp"`  // 이익 잉여금
-	TotalCptl string `json:"total_cptl"` // 자본총계
+type DomesticFinanceBalanceSheet struct {
+	StacYymm  string `json:"stac_yymm,omitempty" yaml:"결산년월,omitempty"`  // 결산 년월
+	Cras      string `json:"cras,omitempty" yaml:"유동자산,omitempty"`       // 유동자산
+	Fxas      string `json:"fxas,omitempty" yaml:"고정자산,omitempty"`       // 고정자산
+	TotalAset string `json:"total_aset,omitempty" yaml:"자산총계,omitempty"` // 자산총계
+	FlowLblt  string `json:"flow_lblt,omitempty" yaml:"유동부채,omitempty"`  // 유동부채
+	FixLblt   string `json:"fix_lblt,omitempty" yaml:"고정부채,omitempty"`   // 고정부채
+	TotalLblt string `json:"total_lblt,omitempty" yaml:"부채총계,omitempty"` // 부채총계
+	Cpfn      string `json:"cpfn,omitempty" yaml:"자본금,omitempty"`        // 자본금
+	CfpSurp   string `json:"cfp_surp,omitempty" yaml:"자본잉여금,omitempty"`  // 자본 잉여금
+	PrfiSurp  string `json:"prfi_surp,omitempty" yaml:"이익잉여금,omitempty"` // 이익 잉여금
+	TotalCptl string `json:"total_cptl,omitempty" yaml:"자본총계,omitempty"` // 자본총계
 }
 
-func validateDomesticFinanceBalance(data *uapiDomesticStockV1FinanceBalanceSheetResponse) ([]*DomesticFinanceBalance, error) {
+func validateDomesticFinanceBalanceSheet(data *uapiDomesticStockV1FinanceBalanceSheetResponse) ([]*DomesticFinanceBalanceSheet, error) {
 	if data == nil {
 		return nil, fmt.Errorf("response data is nil")
 	}
