@@ -41,11 +41,11 @@ check_lists:
     is_ok: false # TBU
   ROE:
     value: 0.0 # TBU
-    ok_if: "<=5.0" # 5% 이하
+    ok_if: ">=5.0" # 5% 이상
     is_ok: false # TBU
   ROA:
     value: 0.0 # TBU
-    ok_if: "<=5.0" # 3% 이하
+    ok_if: ">=3.0" # 3% 이상
     is_ok: false # TBU
   영업이익률:
     value: 0.0 # TBU
