@@ -108,8 +108,8 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 	}
 
 	bItems := make(map[string]*DomesticAccountBalanceItem)
-	if len(data.Output1) == 19 {
-		for i, key := range output1Items19 {
+	if len(data.Output1) == 20 {
+		for i, key := range output1Items20 {
 			item, err := NewDomesticAccountBalanceItem(&data.Output1[i])
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
@@ -118,8 +118,8 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 				bItems[key] = item
 			}
 		}
-	} else if len(data.Output1) == 16 {
-		for i, key := range output1Items16 {
+	} else if len(data.Output1) == 17 {
+		for i, key := range output1Items17 {
 			item, err := NewDomesticAccountBalanceItem(&data.Output1[i])
 			if err != nil {
 				return nil, fmt.Errorf("failed to create item %d: %w", i, err)
@@ -165,9 +165,10 @@ func NewDomesticAccountBalance(data *uapiDomesticStockV1TradingInquireAccountBal
 }
 
 var (
-	output1Items19 = []string{
+	output1Items20 = []string{
 		"주식",
 		"펀드/MMW",
+		"IMA",
 		"채권",
 		"ELS/DLS",
 		"WRAP",
@@ -187,9 +188,10 @@ var (
 		"합계",
 	}
 
-	output1Items16 = []string{
+	output1Items17 = []string{
 		"수익증권",
 		"채권",
+		"IMA",
 		"ELS/DLS",
 		"wrap",
 		"신탁",
