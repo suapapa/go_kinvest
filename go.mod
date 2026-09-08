@@ -1,17 +1,15 @@
 module github.com/suapapa/go_kinvest
 
-go 1.24.2
+go 1.27.0
 
 require (
-	github.com/goccy/go-yaml v1.17.1
-	github.com/oapi-codegen/runtime v1.1.1
-	github.com/stretchr/testify v1.8.4
+	github.com/goccy/go-yaml v1.19.2
+	github.com/oapi-codegen/runtime v1.7.0
+	github.com/stretchr/testify v1.12.1
 )
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/uuid v1.5.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 )
